@@ -1,0 +1,375 @@
+---
+title: "Week 8 ROC Curves and MBA"
+author: "Jarrod Shingleton"
+date: "5/19/2020"
+output: html_document
+---
+
+# Model Performance Comparison Overview
+
+In this practical exercise, you’ll learn to use several more advanced tools to conduct model performance comparison. Specifically, you will:
+
+- Develop a Receiver Operating Characteristic (ROC) curve for a given model.
+- Learn to calculate the Area Under the Curve (AUC), a summary statistic for ROC performance (although it is not as informative as a full ROC curve).
+- Learn to plot and compare multiple ROC curves simultaneously.
+
+## Step 1: Set Up R Environment for Lecture Example Analysis
+Let’s begin by setting up our environment to continue with our lecture examples (hopefully you have been religiously saving your work). First, make sure you have all the needed packages loaded and let’s add a few more that will allow us to plot ROC curves:
+
+```{r Load Environment, message=FALSE}
+### Load previously needed libraries
+library(e1071)
+library(ISLR)
+library(ggplot2)
+library(gridExtra)
+library(class)
+library(rpart) 
+library(rpart.plot)
+library(caret)
+library(plotly)
+##for LDA
+library(MASS)
+
+# New library for calculating ROC curves
+library(ROCR)
+```
+Now, perform the following tasks (you’ve done this a few times now):
+
+- Open the R notebook file you saved under the file name "LectureExampleData2.R"
+
+- Load the lecture examples workspace you saved under the file name “LectureExampleData2.RData”
+
+## Step 2: Develop an ROC Curve and Calculate AUC for a Model
+We will use the plot(), performance() and prediction() commands from the ROCR package to generate ROC curves. While we will plot multiple ROC curves in the next step, let’s begin by plotting an ROC Curve for our logistic regression model. Then, we’ll add several more ROC curves to our graph in the next step.
+
+Before we get started, be sure to check out how the performance() and prediction() commands work by typing the following into the command line:
+
+?prediction
+?performance
+
+To build an ROC curve, we need to get a few statistics out of our prediction data. On the lecture data, we’ll be comparing performance on the Test datastet you named LectureTest. First, let’s get our predicted probabilities out of our model first (you already calculated them once, but we’ll do it again here).
+
+As a reminder of the data we are working with for the lecture examples, here is a quick summary and plot of the “Default” dataset containing all the data (this isn’t split into training and test datasets).
+
+```{r Data Initializing}
+
+# Partition of data set into 80% Train and 20% Test datasets
+set.seed(123)  # ensures we all get the sample sample of data for train/test
+
+sampler <- sample(nrow(Default),trunc(nrow(Default)*.80)) # samples index 
+
+LectureTrain <- Default[sampler,]
+LectureTest <- Default[-sampler,]
+
+# Create a plotting version of the Default dataset where we will store model predictions
+LectureTestPlotting <- LectureTest
+
+```
+
+```{r Plotting Default Data}
+# Testing data summary
+summary(LectureTest)
+## Plot Lecture Train Data
+plotTrain <- ggplot(data = LectureTrain,
+                   mapping = aes(x = balance, y = income, color = default, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Lecture Training Data")
+
+# Plot Lecture Test Data
+plotTest <- ggplot(data = LectureTest,
+                    mapping = aes(x = balance, y = income, color = default, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Lecture Test Data")
+grid.arrange(plotTrain, plotTest, nrow = 2)
+
+```
+
+```{r}
+
+# Assigning the response 
+train.def <- LectureTrain$default
+test.def <- LectureTest$default
+
+# Assign explanatory variables
+train.gc <- LectureTrain[,3:4]
+test.gc <- LectureTest[,3:4]
+
+
+Logit1 <- glm(formula = default ~ .,
+               family  = binomial(link = "logit"),
+               data    = LectureTrain)
+
+# Conduct stepwise model selection
+LogitStep<-step(Logit1, direction = "both")
+predProbLogit<-predict(LogitStep, newdata=LectureTest, type='response')
+
+lda1<-lda(default ~ .,data=LectureTrain)
+
+# Balance data using weights. Used because we have asymetric class sizes.
+wts <- 100/table(Default$default) 
+
+# Apply SVM model using linear kernel having default target and the other three as predictors
+SVM1 <- svm(default ~ .,data=LectureTrain, kernel="linear",
+             cost=1,gamma=1, class.weight=wts,
+             probability=TRUE, decision.values=TRUE)
+# Get the probabilities predicted by SVM
+
+load("SVMLecture.rdata")  # loads model data file saved by instructor
+# Now extra}ct the best model
+SVMBest<-SVM.Tuned$best.model
+CART <- rpart(default ~., data=LectureTrain, cp=0.000001)
+bestcp<-CART$cptable[which(CART$cptable[,4]==min(CART$cptable[,4])), 1]
+CART<-prune(CART, cp=bestcp)
+predProbCART<-predict(CART, newdata=LectureTest, type="prob")[,2]
+knn.best.prob <-  knn(train.gc, test.gc, train.def,prob=TRUE, k=13)
+
+```
+
+Before we jump straight into using the ROCR package, something was really bothering me about ROC curves. Well, two things, actually. The first was that it didn't seem very handy to just look at the curve. What is the point? I want to know the threshold and where the best one is! So, I made my own function to plot ROC curves.
+
+```{r}
+
+handROC<-function(pred1, actual, splits=0.05){
+  cuttoff<-seq(0,1, by=splits)
+  
+  df1<-data.frame(threshold=cuttoff, fpos=0, tpos=0)
+  
+  ##calculate the fpos and tpos for each of the thresholds
+  for(i in 1:dim(df1)[1]){
+    cut1<-ifelse(pred1>df1[i,1], 1, 0)
+    tab1<-table( cut1, actual)
+    if(dim(tab1)[1]==1){
+      if(rownames(tab1)=="1"){
+        tab1<-rbind(tab1, c(0,0))
+        rownames(tab1)<-c("1", "0")
+        tab1<-tab1[c(2,1),]}
+      else{
+        tab1<-rbind(tab1, c(0,0))
+        rownames(tab1)<-c("0", "1")
+        }
+    }
+    falsecol<-which(colnames(tab1)=="0")
+    truecol<-which(colnames(tab1)=="1")
+    predtruerow<-which(rownames(tab1)=="1")
+    df1$fpos[i]<-tab1[predtruerow,falsecol]/sum(tab1[,falsecol])
+    df1$tpos[i]<-tab1[predtruerow,truecol]/sum(tab1[,truecol])
+  }
+  #####    #####    #####    #####  
+  ##calculate AUROC
+  rhs<-df1$fpos[2:length(df1$fpos)[1]]
+  lhs<-df1$fpos[1:(length(df1$fpos)[1]-1)]
+  length<-abs(rhs-lhs)
+  height<-df1$tpos[2:length(df1$tpos)[1]]
+  
+  boxes<-sum(length*height)  ##actual AUC
+  #####    #####    #####    #####  
+  
+  ##calcualte g-means and optimal threshold using g-means
+  df1$gmean<-sqrt(df1$tpos*(1-df1$fpos))
+  optthreshgmean<-df1[which.max(df1$gmean),]
+
+  ##calcualte J-score and optimal threshold using j-score
+  df1$jstat<-df1$tpos-df1$fpos
+  optthreshjstat<-df1[which.max(df1$jstat),]
+  
+  
+  ggplot(df1)+geom_step(aes(x=fpos, y=tpos))+
+    geom_point(aes(x=fpos, y=tpos, color=threshold), size=0.5)+
+    xlab("False Positive Rate")+ylab("True Positive Rate")+
+    ggtitle(paste0("AUC:", round(boxes, 2), " Opt Gmean Thresh: ", optthreshjstat$threshold," Opt J Stat Thresh: ",optthreshjstat$threshold ))+theme_bw()
+
+
+}
+##Have to pass in probabilities and responses in the format of 0,1 factors. Splits can be whatever
+ggplotly(handROC(predProbLogit,as.factor(as.numeric(test.def)-1),  splits=0.001))
+```
+
+This is pretty interesting, being that the optimal threshold is around 0.046. What does that mean for our Default data? Well, that means that we should air on the side of caution for new accounts and if they even have a whiff of default, we watch them like a hawk.
+
+Now, lets use the ROCR package!
+
+We can calculate the needed True Positive Rate (TPR) and False Positive Rate (FPR) for the model using the performance() command, which requires the data to be formatted using the prediction() command. Note that we calculate the needed statistics using our predicted probabilities (getting these varies slightly for different models as you’ll see in the next section) and the observed response values. The code below places the outputs in the appropriate format.
+
+```{r}
+
+# Get predicted probabilities from our best logit model
+predProbLogit <- predict(LogitStep, type = "response", newdata = LectureTest)
+# Calculate ROC statistics for our best logit model
+Logit.ROC <- performance(prediction(predProbLogit, LectureTest$default), measure="tpr", x.measure="fpr")
+```
+
+Now, take a quick look at the values stored as attributes for the ROC statistics by calling Logit.ROC from the command prompt (literally type *Logit.ROC@* into the command prompt). The True Positive Rate (TPR) has been stored in the y.values slot (called via the command Logit.ROC@y.values) and the False Positive Rate (FPR) has been stored in the x.values slot (called the same way). We will use these attributes in just a minute to plot the difference in performance between several models at the same time. However, the ROCR package allows you to plot the ROC curve directly by calling the generic plot() command on the saved statistics as follows:
+
+```{r}
+plot(Logit.ROC, lwd = 2, main = "ROC Curve for Logistic Regression Model", colorize=TRUE)
+```
+
+We can also use the performance() command to calculate the Area Under the (ROC) Curve (AUC) statistic. This statistic has a nice “real-world” definition in that it is the probability the model will rank a randomly chosen positive instance (i.e. default = “yes) higher than a randomly chosen negative one (default =”no“). The AUC is calculated in a similar manner to the ROC curve statistics above, and the resulting AUC statistic is stored in the y.value slot (see example below):
+
+```{r}
+# Calculate AUC - use @y.values to get AUC out
+Logit.AUC <- performance(prediction(predProbLogit, LectureTest$default), 
+                         measure="auc")@y.values
+Logit.AUC
+```
+
+Notice that this AUC might be a little different from my function. There are different methods for calculating the AUC and I am not sure of the exact method the ROCR function used.
+
+Remember, and AUC > 0.8 is good. So, we are looking good for the logistic model!
+
+## Step 3: Plot/Compare Multiple ROC Curves Simultaneously (ROC Model Comparison)
+
+```{r}
+# SVM - note that probability of "Yes" for default is in second column
+predProbSVM<-attributes(predict(SVMBest, LectureTest, 
+                                probability = TRUE))$probabilities[,2]
+SVM.ROC <- performance(prediction(predProbSVM, LectureTest$default), 
+                       measure="tpr", x.measure="fpr")
+
+
+
+# 
+# for(i in 1:length(KNN.prob))
+#   KNN.prob[i] <- ifelse(knn.best.prob[i] != "No", attr(knn.best.prob, 'prob')[i], 1 - attr(knn.best.prob, 'prob')[i])
+
+##Previous code (above) was not actually working. This works.
+KNNDF<-data.frame(result=knn.best.prob, prob=attr(knn.best.prob, 'prob'))
+KNNDF$newprob<-ifelse(KNNDF$result=="Yes", KNNDF$prob, 1-KNNDF$prob)
+
+predProbKNN <- prediction(KNNDF$newprob, LectureTest$default)
+KNN.ROC <- performance(predProbKNN, measure="tpr", x.measure="fpr")
+# CART model
+CART.ROC <- performance(prediction(predProbCART, LectureTest$default), measure="tpr", x.measure="fpr")
+
+```
+
+Now, we can plot multiple ROC curves at the same time by using ggplot. Note two important features below. First, note the calls to the x.values and y.values to get the needed TPR and FPR out of the ROC statistics. Also, note the use of the commands for the legend, which make it easier to differentiate between the different models.
+
+```{r}
+### Plot our ROC Performance with Logit as base
+
+col<-c("Logit"="red", "SVM"="blue", "KNN"="orange", "CART"="green")
+gRoc<-ggplot()+geom_line(aes(x=Logit.ROC@x.values[[1]], y=Logit.ROC@y.values[[1]], color="Logit"))+
+  geom_line(aes(x=SVM.ROC@x.values[[1]], y=SVM.ROC@y.values[[1]], color="SVM"))+
+  geom_line(aes(x=KNN.ROC@x.values[[1]], y=KNN.ROC@y.values[[1]], color="KNN"))+
+  geom_line(aes(x=CART.ROC@x.values[[1]], y=CART.ROC@y.values[[1]], color="CART"))+
+  theme_bw()+ggtitle("ROC Comparison for Models on Lecture Test Dataset")+xlab("FPR")+ylab("TPR")
+ggplotly(gRoc)
+```
+
+We can also report each of the AUC values for comparison:
+
+```{r}
+SVM.AUC <- performance(prediction(predProbSVM, LectureTest$default), 
+                         measure="auc")@y.values
+
+KNN.AUC <- performance(prediction(KNNDF$newprob, LectureTest$default), 
+                       measure="auc")@y.values
+
+CART.AUC <- performance(prediction(predProbCART, LectureTest$default), 
+                       measure="auc")@y.values
+
+Logit.AUC
+SVM.AUC
+KNN.AUC
+CART.AUC
+```
+
+What we see is that for this particular problem, the Logistic Regression model seems to provide the best performance. However, this is not a general result - we’ll have to conduct our own performance tests on the Santa Ana dataset to determine which model performs best on that particular case.
+
+# Precision Recall Curve
+
+About this time you are thinking "self, what about the PR curve that he talked about earlier!?" Well, let's take a look!
+
+```{r}
+library(PRROC)
+pr<-pr.curve(scores.class0 = predProbLogit,weights.class0=as.numeric(test.def)-1, curve = TRUE)
+plot(pr)
+
+```
+
+Can we find the ideal threshold here? You bet! Using the F-score.
+
+```{r}
+pr1<-as.data.frame(pr$curve)
+pr1$fmes<-(2*pr1[,1]*pr1[,2])/(pr1[,1]+pr1[,2])
+pr1[which.max(pr1$fmes),]
+```
+
+# Market Basket Analysis
+
+We will be leaning heavily on Susan Li's 2017 "A Gentle Introduction on Market Basket Analysis - Association Rules"  and Hafsa Jabeen's "Market Basket Analysis using R". Why? Because they are a pretty good guides and it is where I learned my MBA from.
+
+First, we some more packages. *plyr* makes our life a lot easier and arules and arulesViz for the rules stuff. And read in the data.
+
+```{r}
+
+library(arules)
+library(arulesViz)
+library(plyr)
+retail<-read.csv("retail.csv")
+retail$Date<-as.Date(retail$InvoiceDate, format="%m/%d/%y %H:%M") ##change this to a date object.
+
+```
+
+```{r}
+
+itemList <- ddply(retail,c("CustomerID","Date"), 
+                  function(df1)paste(df1$Description, 
+                                     collapse = ","))
+itemList$CustomerID <- NULL
+itemList$Date <- NULL
+colnames(itemList) <- c("items")
+head(itemList)
+```
+
+We have to write our itemlist to a .csv and read it back in to get it in the "basket" format.
+
+```{r Write and Read Market Baskets, warnings=FALSE}
+write.csv(itemList,"market_basket.csv", quote = FALSE, row.names = TRUE)
+
+tr <- read.transactions('market_basket.csv', format = 'basket', sep=',')
+tr
+summary(tr)
+```
+
+You can take a look at the top items. Here we look at the top 20.
+
+```{r Item Freq Plot}
+itemFrequencyPlot(tr, topN=20, type='absolute')
+```
+Now we can create rules from this market basket!
+
+```{r MBA rules Generation}
+rules <- apriori(tr, parameter = list(supp=0.02, conf=0.8,maxlen=5))
+# rules <- sort(rules, by='confidence', decreasing = TRUE)
+summary(rules)
+
+```
+
+What if we want to search them at some time or other? We can turn our rules into a data frame for later use. I am just going to take the top 500 rules because this takes some time.
+
+```{r}
+rulesdf<-as(rules[1:500], "data.frame")
+head(rulesdf)
+```
+
+Now we can search for something like "RED TOADSTOOL."
+
+```{r}
+rulesdf[grep( "RED TOADSTOOL", rulesdf$rules),]
+```
+
+Finally, you can make a network graph of your rules. I don't think that this is super useful, but you can do it. So there is that.
+
+```{r}
+plot(rules[1:10], method="graph")
+```
+
+Before we move on, save the lecture example work you’ve completed to use for future reference (you have now completed all lecture example material). Save your work.

@@ -1,0 +1,180 @@
+---
+title: "Week 10 In Class Lab"
+author: "Jarrod Shingleton"
+date: "5/25/2020"
+output: html_document
+---
+
+# Random Forest Modeling Overview
+In this practical application exercise, you will:
+
+- Review on fitting a classification tree for the lecture (Default) dataset using provided code
+- Fit a random forest model to the same dataset using provided code
+
+# Step 1: Set Up R Environment for Lecture Example Analysis
+Let’s begin by setting up our environment to continue with our lecture examples. First, make sure you have all the needed packages loaded and add some new ones for fitting Classification and Regression Trees (CART), Random Forest Models, and for making some pretty pictures (note - the standard way to do this in the R community is to always put the needed libraries at the very top of your script, so adjust your script file accordingly):
+
+```{r setup, message=FALSE}
+### Load needed libraries
+library(e1071)
+library(ISLR)
+library(ggplot2)
+library(gridExtra)
+library(caret)
+
+# New model libraries
+library(rpart) # new library for CART modeling
+library(randomForest) # new library added for random forests and bagging
+
+# New package for making pretty pictures of CART trees
+library(rpart.plot)
+```
+
+# Step 2: Confirm Datasets Loaded and Visualize
+As a reminder of the data we are working with for the lecture examples, here is a quick summary and plot of the “Default” dataset containing all the data (this isn’t split into training and test datasets).
+
+```{r Data Initializing}
+
+# Partition of data set into 80% Train and 20% Test datasets
+set.seed(123)  # ensures we all get the sample sample of data for train/test
+
+sampler <- sample(nrow(Default),trunc(nrow(Default)*.80)) # samples index 
+
+LectureTrain <- Default[sampler,]
+LectureTest <- Default[-sampler,]
+
+# Create a plotting version of the Default dataset where we will store model predictions
+LectureTestPlotting <- LectureTest
+
+```
+
+```{r Plotting Default Data}
+# Testing data summary
+summary(LectureTest)
+## Plot Lecture Train Data
+plotTrain <- ggplot(data = LectureTrain,
+                   mapping = aes(x = balance, y = income, color = default, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Lecture Training Data")
+
+# Plot Lecture Test Data
+plotTest <- ggplot(data = LectureTest,
+                    mapping = aes(x = balance, y = income, color = default, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Lecture Test Data")
+grid.arrange(plotTrain, plotTest, nrow = 2)
+
+```
+
+# Recall: CART model
+
+## Step 3: Build a Classification Tree
+
+As discussed in the lecture, random forest models are an extended application of classification trees. Therefore, before fitting random forest models, let’s fit a classification tree to our data and see how we do (this will also allow us to see if extending to a random forest model improves our performance). The code block below fits a classification tree using the rpart package and then visualizes it using the prp() function from the rpart.plot package.
+
+```{r}
+
+CART <- rpart(default ~., data=LectureTrain)
+summary(CART)
+```
+
+```{r}
+# Make a plot of the classification tree rules
+prp(CART)
+```
+
+Look at that. You now have a visual summary of how the CART model (in this case a classification model) is going to make a decision about whether or not someone is going to default. CART models offer maximum explainability. We have found that one of the great benefits to using random forest models is that it is relatively easy to explain to people how a random forest model works if you show them a CART output first (hence this portion of the practical exercise). Let’s see how this model performs on the test dataset:
+
+```{r}
+
+# Summarize and plot the performance of the classification tree
+
+# Get the probability classes for CART model applied to test dataset
+predClassCART <- predict(CART, newdata = LectureTest, type = "class")
+
+# Add to our plotting dataframe
+LectureTestPlotting$predClassCART <- predClassCART
+
+## Plot the CART class
+plotClassCART <- ggplot(data = LectureTestPlotting,
+                       mapping = aes(x = balance, y = income, color = predClassCART, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Predicted class for CART Model")
+grid.arrange(plotTest, plotClassCART, nrow = 2)
+```
+
+```{r}
+# Report confusion matrix from on the test dataset
+confusionMatrix(predClassCART, LectureTest$default)
+
+```
+
+# Random Forest
+## Step 4: Build a Random Forest Model
+Fitting a random forest model in R using the randomForest package is a simple extension of the syntax we’ve been using for all of the model fitting. As an aside, for each of these models, you can learn about the models by typing a question mark into the command line followed by the command you want to investigate. For example, type the following into your command line: ?randomForest.
+
+You will see that in the lower right window of your RStudio instance, you get a report that tells you about all of the parameters you can adjust for your models. In this course, we are not going in depth into the tuning of the models we are fitting (this is just an overview course), but to become truly proficient in data science you should understand all of these parameters and how to adjust them appropriately.
+
+For this example, we are going to accept the package defaults, get information about the predictor variable importance (importance = TRUE), and fit 500 trees (ntrees = 500).
+
+```{r}
+# Applyrandom forests model having default target and rest as predictors
+RandomForest <- randomForest(default ~ ., data=LectureTrain, importance = TRUE, ntrees = 500)
+summary(RandomForest)
+```
+
+Now, let’s do the performance summaries on the test dataset that are becoming standard (visualization and confusion matrix statistics).
+
+```{r}
+
+# Summarize and plot the performance of the random forest model
+
+# Get the probability of "yes" for default from second column
+predProbRF <- predict(RandomForest, newdata = LectureTest, type = "prob")[,2]
+
+# Get the predicted class
+predClassRF <- predict(RandomForest, newdata = LectureTest, type = "response")
+
+
+# Add to our plotting dataframe
+LectureTestPlotting$predProbRF <- predProbRF
+LectureTestPlotting$predClassRF <- predClassRF
+
+## Plot the RF Probability
+plotProbRF <- ggplot(data = LectureTestPlotting,
+                      mapping = aes(x = balance, y = income, color = predProbRF, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_gradient(low = "blue", high = "red") +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Predicted Probability for RF Model")
+
+# Plot the RF Class
+plotClassRF <- ggplot(data = LectureTestPlotting,
+                        mapping = aes(x = balance, y = income, color = predClassRF, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Predicted Class for RF Model")
+
+# Standard Performance Plot
+grid.arrange(plotTest, plotProbRF, plotClassRF, nrow = 3)
+```
+
+```{r}
+# Report confusion matrix from on the test dataset
+confusionMatrix(predClassRF , LectureTest$default)
+
+```
+
+Save your stuff!

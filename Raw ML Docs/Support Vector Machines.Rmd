@@ -1,0 +1,253 @@
+---
+title: "Week 6 In-Class Lab Exercise"
+author: "Jarrod Shingleton"
+date: "5/3/2020"
+output: html_document
+---
+# Support Vector Machine (SVM) Models
+## Support Vector Machines Overview
+
+This practical application exercise will perform the same analysis conducted in the last practical application. However, we will make a few changes to the previous analysis:
+
+- We will fit SVM models instead of logistic regression models
+- We will compare the performance of our logistic regression model to our new SVM model
+- We will evaluate the difference in performance between training and test sets with the SVM model and briefly discuss how model tuning generates the need for validation datasets.
+
+## Step 1: Set Up R Environment for Lecture Example Analysis
+Let’s begin by setting up our environment to continue with our lecture examples. Perform the following tasks:
+
+- Open the R notebook you saved under the file name “LectureExampleData2” so that you can continue building out the lecture examples
+- Load the lecture examples workspace you saved under the file name “LectureExampleData2.RData”
+
+You will also need to load the e1071 library for fitting SVM models and the other packages we’ve used previously:
+
+```{r}
+# Package for fitting SVM
+library(e1071)
+
+## Library for An Introduction to Statistical Learning with Applications in R
+library(ISLR)
+
+## Libraries for Plotting our Results
+library(ggplot2)
+library(gridExtra)
+
+## Library for confusion matrix
+library(caret)
+
+##for LDA
+library(MASS)
+```
+
+## Step 2: Visualize the Data
+As a reminder of the data we are working with for the lecture examples, here is a quick summary and plot of the “Default” dataset containing all the data (this isn’t split into training and test datasets):
+
+```{r}
+
+# Data Summary
+summary(Default) 
+
+## Data plot
+plotData <- ggplot(data = Default,
+       mapping = aes(x = balance, y = income, color = default)) +
+    layer(geom = "point", stat = "identity", position = "identity") +
+    scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+    theme_bw() +
+    theme(legend.key = element_blank()) +
+    labs(title = "Original data")
+plotData
+```
+
+We will be using the previously split training and test datasets, which should be stored in your workspace file as LectureTrain and LectureTest. If you do not, the code is below:
+
+```{r}
+
+# Partition of data set into 80% Train and 20% Test datasets
+set.seed(123)  # ensures we all get the sample sample of data for train/test
+
+sampler <- sample(nrow(Default),trunc(nrow(Default)*.80)) # samples index 
+
+LectureTrain <- Default[sampler,]
+LectureTest <- Default[-sampler,]
+
+Logit1 <- glm(formula = default ~ .,
+               family  = binomial(link = "logit"),
+               data    = LectureTrain)
+
+# Conduct stepwise model selection
+LogitStep<-step(Logit1, direction = "both")
+
+# Put the predicted probability and class (at 0.5 threshold) at the end of the dataframe
+predProbLogit <- predict(LogitStep, type = "response", newdata = LectureTest)
+predClassLogit <- factor(predict(LogitStep, type = "response", newdata=LectureTest) > 0.5, levels = c(FALSE,TRUE), labels = c("No","Yes"))
+
+# Create a plotting version of the Default dataset where we will store model predictions
+LectureTestPlotting <- LectureTest
+
+# Put the predicted probability and class (at 0.5 threshold) at the end of the plotting dataframe
+LectureTestPlotting$predProbLogit <- predProbLogit
+LectureTestPlotting$predClassLogit <- predClassLogit
+
+# summary(LectureTestPlotting)  # look at a summary of the updated data frame
+
+```
+
+## Step 3: Fit an LDA model with Defaults
+
+This is just a familiarization of LDA, as I think that the reading talked about LDA a lot and you should at least try an LDA model and compare the results!
+
+```{r}
+
+lda1<-lda(default ~ .,data=LectureTrain)
+lda1
+```
+
+Now we take a look at how well the LDA did. We will compare this to the logit and the SVM results.
+
+```{r}
+
+ldaPredict<-predict(lda1, newdata = LectureTest, type="response")
+
+cmLDA<-confusionMatrix(ldaPredict$class, LectureTest$default) ##make sure to call "class!"
+cmLDA
+```
+
+## Step 4: Fit an SVM model with Defaults
+The code below fits an SVM model with the default settings (i.e. no tuning):
+```{r}
+
+# Set a seed value so get same answer each time we fit
+set.seed(123)
+
+# Balance data using weights. Used because we have asymetric class sizes.
+wts <- 100/table(Default$default) 
+
+# Apply SVM model using linear kernel having default target and the other three as predictors
+SVM1 <- svm(default ~ .,data=LectureTrain, kernel="linear",
+             cost=1,gamma=1, class.weight=wts,
+             probability=TRUE, decision.values=TRUE)
+summary(SVM1)
+
+```
+
+We can capture the predicted probabilities and classes using the code below. We will then attach these values to our LectureTestPlotting dataframe as we did with the logistic regression model.
+
+```{r}
+
+# Get the probabilities predicted by SVM
+predProbSVMraw <-predict(SVM1, LectureTest, probability = TRUE)
+
+# Get the probabilitiy of "Yes" from the attributes
+predProbSVM1 <- attributes(predProbSVMraw)$probabilities[,2]
+
+# Get the probability classes
+predClassSVM1 <- predict(SVM1, newdata = LectureTest)
+
+# Attach to our plotting dataframe
+LectureTestPlotting$predProbSVM1  <- predProbSVM1
+LectureTestPlotting$predClassSVM1 <- predClassSVM1 
+
+
+```
+
+As before, we can plot the probabilites and the assigned classes and compare them to the known values.
+
+```{r}
+
+# Plot the actual test data
+plotTest<-ggplot(data = LectureTestPlotting,
+                 mapping = aes(x = balance, y = income, color = default, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Test Data")
+
+# Plot (probability)
+plotSVM1 <- ggplot(data = LectureTestPlotting,
+                    mapping = aes(x = balance, y = income, color = predProbSVM1, shape = student)) +
+  layer(geom = "point",stat = "identity", position = "identity") +
+  scale_color_gradient(low = "blue", high = "red") +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Predicted probability of outcome (SVM)")
+
+## Plot the class using threshold of 0.5
+plotSVMClass <- ggplot(data = LectureTestPlotting,
+                       mapping = aes(x = balance, y = income, color = predClassSVM1, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Predicted outcome (SVM; p>0.5)")
+
+# Plot original data (top row), predicted probability (second row), and assigned class (third row)
+grid.arrange(plotTest, plotSVM1, plotSVMClass, nrow = 3)
+```
+
+It is somewhat hard to evaluate the performance with the plots above, so let’s use the confusionMatrix function to compare the performance of this model to the logistic regression model we fit earlier. The confusion matrix for our default SVM model is:
+
+```{r}
+# Report confusion matrix from SVM model for comparison
+cmSVMnoTune<-confusionMatrix(predClassSVM1, LectureTest$default)
+cmSVMnoTune
+```
+
+## Step 4: Tuning the SVM Model
+Now, we can build a tuned SVM model by exploring the parameter space with the *tune* command. We will store the best model as SVMBest.
+
+Referencing our previous work, we can compare that performance to our logistic regression model.
+
+```{r}
+# Report confusion matrix from logit model for comparison
+cmLogit<-confusionMatrix(predClassLogit, LectureTest$default)
+cmLogit
+```
+
+What we find is that the SVM model does a better job of correctly identifying those who will default (correctly identifying 48 of 58 of them) but the overall predictive accuracy is worse (only 85.85% vs. 97.15%) because the SVM model asserts that many people (about 273) will default that do not. This occurs because this model has not been tuned appropriately.
+
+Note: We ARE NOT going to run the SVMTuned code. This take, oh, I don't know. Probably around 30 min. So, I have saved the model for you in SVMLecture.RData. Did you know that you can save just models for later loading and use? Pretty cool!
+
+```{r}
+
+# Balance data using weights from training dataset
+# wts <- 100/table(LectureTrain$default)
+# 
+# # Now we build a tuned SVM model using the tune function
+# # Note this code is commented out due to long model fitting time
+# set.seed(123)
+# SVMTuned=tune(svm, default~., data=LectureTrain, kernel="linear", probability = TRUE,
+#               class.weight=wts,  ranges=list(cost=c(0.1,1,10,100,1000),
+#               gamma=c(0.5,1,2,3,4)))
+# 
+# SVMTuned # prints report about SVM.Tuned
+# This code loads the model fit using the code above that is saved into your css_data file
+# Take note of this feature - we are loading a previously fit model stored as an .RData file
+load("SVMLecture.rdata")  # loads model data file saved by instructor
+# Now extract the best model
+SVMBest<-SVM.Tuned$best.model
+```
+
+Now, evaluating our model performance using the confusion matrix (on the test dataset), we get a slight improvement in our overall accuracy (but we lose some specificity). What should be occurring to you about now is that, for comparing the performance of classification models, the confusion matrix might not be the best tool (much more to follow in future practical application exercises and lectures).
+
+```{r}
+# Calculate tuned model performance on the test dataset
+predClassSVMBest=predict(SVMBest, LectureTest)
+
+# Report confusion matrix from on the test dataset
+cmSVMTuned<-confusionMatrix(predClassSVMBest, LectureTest$default)
+cmSVMTuned
+```
+
+As a final exercise, let's take a look at the performance of all of the models that we have thusfar:
+
+```{r}
+cmLDA$overall
+cmLogit$overall
+cmSVMnoTune$overall
+cmSVMTuned$overall
+```
+
+Before moving on, perform the following actions to save your work and prepare for the practical application:
+
+- Save your workspace as “LectureExampleData2.RData” (By typing save.image(“LectureExampleData1.RData”) function)

@@ -1,0 +1,404 @@
+---
+title: "Week 9 In Class Lab"
+author: "Jarrod Shingleton"
+date: "5/25/2020"
+output: html_document
+---
+
+# Random Forest Modeling Overview
+In this practical application exercise, you will:
+
+- Review on fitting a classification tree for the lecture (Default) dataset using provided code
+- Fit a random forest model to the same dataset using provided code
+
+# Step 1: Set Up R Environment for Lecture Example Analysis
+Let’s begin by setting up our environment to continue with our lecture examples. First, make sure you have all the needed packages loaded and add some new ones for fitting Classification and Regression Trees (CART), Random Forest Models, and for making some pretty pictures (note - the standard way to do this in the R community is to always put the needed libraries at the very top of your script, so adjust your script file accordingly):
+
+```{r setup, message=FALSE}
+### Load needed libraries
+library(e1071)
+library(ISLR)
+library(ggplot2)
+library(gridExtra)
+library(caret)
+library(MASS)
+library(class)
+
+#For bagging
+library (ipred)
+
+
+# New model libraries
+library(rpart) # new library for CART modeling
+library(randomForest) # new library added for random forests and bagging
+
+# New package for making pretty pictures of CART trees
+library(rpart.plot)
+```
+
+# Step 2: Confirm Datasets Loaded and Visualize
+As a reminder of the data we are working with for the lecture examples, here is a quick summary and plot of the “Default” dataset containing all the data (this isn’t split into training and test datasets).
+
+```{r Data Initializing}
+
+# Partition of data set into 80% Train and 20% Test datasets
+set.seed(123)  # ensures we all get the sample sample of data for train/test
+
+sampler <- sample(nrow(Default),trunc(nrow(Default)*.80)) # samples index 
+
+LectureTrain <- Default[sampler,]
+LectureTest <- Default[-sampler,]
+
+# Create a plotting version of the Default dataset where we will store model predictions
+LectureTestPlotting <- LectureTest
+
+```
+
+```{r Plotting Default Data}
+# Testing data summary
+summary(LectureTest)
+## Plot Lecture Train Data
+plotTrain <- ggplot(data = LectureTrain,
+                   mapping = aes(x = balance, y = income, color = default, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Lecture Training Data")
+
+# Plot Lecture Test Data
+plotTest <- ggplot(data = LectureTest,
+                    mapping = aes(x = balance, y = income, color = default, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Lecture Test Data")
+grid.arrange(plotTrain, plotTest, nrow = 2)
+
+```
+
+# Recall: CART model
+
+## Step 3: Build a Classification Tree
+
+As discussed in the lecture, random forest models are an extended application of classification trees. Therefore, before fitting random forest models, let’s fit a classification tree to our data and see how we do (this will also allow us to see if extending to a random forest model improves our performance). The code block below fits a classification tree using the rpart package and then visualizes it using the prp() function from the rpart.plot package.
+
+```{r}
+
+CART <- rpart(default ~., data=LectureTrain)
+summary(CART)
+```
+
+```{r}
+# Make a plot of the classification tree rules
+prp(CART)
+```
+
+Look at that. You now have a visual summary of how the CART model (in this case a classification model) is going to make a decision about whether or not someone is going to default. CART models offer maximum explainability. We have found that one of the great benefits to using random forest models is that it is relatively easy to explain to people how a random forest model works if you show them a CART output first (hence this portion of the practical exercise). Let’s see how this model performs on the test dataset:
+
+```{r}
+
+# Summarize and plot the performance of the classification tree
+
+# Get the probability classes for CART model applied to test dataset
+predClassCART <- predict(CART, newdata = LectureTest, type = "class")
+
+# Add to our plotting dataframe
+LectureTestPlotting$predClassCART <- predClassCART
+
+## Plot the CART class
+plotClassCART <- ggplot(data = LectureTestPlotting,
+                       mapping = aes(x = balance, y = income, color = predClassCART, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Predicted class for CART Model")
+grid.arrange(plotTest, plotClassCART, nrow = 2)
+```
+
+```{r}
+# Report confusion matrix from on the test dataset
+confusionMatrix(predClassCART, LectureTest$default)
+
+```
+
+# Hand Made Ensemble
+
+Before we do any ensemble methods using the cool packages, I had an idea. Can we take a vote from all of the models that we have created? Would this make for a better prediction?!?! Let's try!
+
+```{r}
+##Set up the data for SVM
+# Assigning the response 
+train.def <- LectureTrain$default
+test.def <- LectureTest$default
+
+# Assign explanatory variables
+train.gc <- LectureTrain[,3:4]
+test.gc <- LectureTest[,3:4]
+####################################################################################################
+####################Logistic Regression Model and Prediction
+Logit1 <- glm(formula = default ~ .,
+               family  = binomial(link = "logit"),
+               data    = LectureTrain)
+# Conduct stepwise model selection
+LogitStep<-step(Logit1, direction = "both")
+predProbLogit<-predict(LogitStep, newdata=LectureTest, type='response')
+predLogit<-ifelse(predProbLogit>=0.5, 1,0)
+
+####################################################################################################
+###LDA model and prediction
+lda1<-lda(default ~ .,data=LectureTrain)
+predLDA<-predict(lda1, newdata=LectureTest)$class
+predLDA<-as.numeric(predLDA)-1
+
+####################################################################################################
+###SVM, tuned and untuned
+# Balance data using weights. Used because we have asymetric class sizes.
+wts <- 100/table(Default$default) 
+
+# Apply SVM model using linear kernel having default target and the other three as predictors
+SVM1 <- svm(default ~ .,data=LectureTrain, kernel="linear",
+             cost=1,gamma=1, class.weight=wts,
+             probability=TRUE, decision.values=TRUE)
+# Get the probabilities predicted by SVM
+
+load("SVMLecture.rdata")  # loads model data file saved by instructor
+# Now extra}ct the best model
+SVMBest<-SVM.Tuned$best.model
+
+predSVM1<-predict(SVM1, newdata=LectureTest)
+predSVM1<-as.numeric(predSVM1)-1
+predSVMTuned<-predict(SVMBest, newdata=LectureTest)
+predSVMTuned<-as.numeric(predSVMTuned)-1
+####################################################################################################
+##CART!
+CART <- rpart(default ~., data=LectureTrain, cp=0.000001)
+bestcp<-CART$cptable[which(CART$cptable[,4]==min(CART$cptable[,4])), 1]
+CART<-prune(CART, cp=bestcp)
+predCART<-predict(CART, newdata=LectureTest, type="class")
+predCART<-as.numeric(predCART)-1
+####################################################################################################
+##KNN!
+predKNN <-  knn(train.gc, test.gc, train.def, k=13)
+predKNN<-as.numeric(predKNN)-1
+```
+
+Now, we have a whole load of models, lets take a vote! We have six models, so, just so we don't have a tie, we won't use the untuned SVM.
+
+```{r}
+vote<-(predSVMTuned+predLDA+predLogit+predCART+predKNN)/5
+vote2<-ifelse(vote>0.5, "Yes","No")
+confusionMatrix(as.factor(vote2), LectureTest$default)
+```
+
+Is this significantly better than just using of of the other models? Meh. Not really. But, it is an uncomprehensable, unwieldy model that we made with our own models! Yay!
+
+# Bagging
+
+We are going to bring in some new data. Wage data for this exerciese.
+
+```{r}
+wage.train <- read.csv ("wage.train.csv")
+wage.test  <- read.csv ("wage.test.csv")
+summary(wage.train)
+```
+
+We can also visualize this data...kinda.
+
+```{r}
+g<-ggplot(wage.train)+geom_point(aes(x=Age, y=Educ, color=Wage))+
+  theme_bw()
+g
+```
+
+```{r}
+wage.lm1 <- lm (log (Wage) ~ ., data = wage.train) # additive
+wage.lm3 <- lm (log (Wage) ~ . ^ 2, data = wage.train) # all two-way interactions
+# This next one took 5-10 seconds on my fast machine.
+wage.lm2 <- stepAIC (wage.lm3, direction = "both", trace=0)
+#
+# ...Now build some rpart trees.
+#
+wage.rp3 <- rpart (log (Wage) ~ ., data = wage.train, cp = .001) # too big
+#
+# Find the row with the smallest xerror. The [1] breaks a tie if there is one.
+#
+minrow <- which (wage.rp3$cptable[,"xerror"] == min (wage.rp3$cptable[,"xerror"]))[1]
+mincp <- wage.rp3$cptable[minrow, "CP"]
+#
+# Find the value of that minimum xerror plus one sd, for the 1SE rule.
+#
+#
+# Prune tree. 
+#
+wage.rp2 <- prune.rpart (wage.rp3, cp = mincp)   # "optimal" size
+
+
+########################################
+#
+# Test set performance. If we wanted an R-squared-like measure, we
+# would use code like this (remember that the observations are Wage,
+# but the predictions are logs of Wage).
+#
+# denom <- sum ( (log (wage.test$Wage) - mean (log (wage.test$Wage))) ^2)
+# 1 - sum ( (log (wage.test$Wage) - predict (wage.lm1, wage.test))^2) / denom
+#
+# That seems too complicated. So let's just compute the sum of squared
+# errors between observed and predicted in the test set. Small is better!
+
+sum ( (log (wage.test$Wage) - predict (wage.lm1, wage.test))^2)
+sum ( (log (wage.test$Wage) - predict (wage.lm2, wage.test))^2)
+sum ( (log (wage.test$Wage) - predict (wage.lm3, wage.test))^2)
+
+sum ( (log (wage.test$Wage) - predict (wage.rp2, wage.test))^2)
+
+#
+# The linear models work a bit better.
+# Now try bagging. How well does this perform? The default # of trees
+# in the bag is 25. Let's try it with 100 -- and run it a few times,
+# to get a feel for variability.
+#
+wage.bag <- bagging (log (Wage) ~ ., data = wage.train, nbagg = 100)
+sum ( (log (wage.test$Wage) - predict (wage.bag, wage.test))^2)
+#
+# Answer: a little better. Certainly an easy thing to build and use,
+# though it's now hard to interpret. How about a random forest?
+#
+wage.rf <- randomForest (log (Wage) ~ ., data = wage.train, nbagg = 100)
+sum ( (log (wage.test$Wage) - predict (wage.rf, wage.test))^2)
+#
+# In this example, the random forest doesn't seem quite as good.
+#
+###############################################
+```
+
+
+How about a classification with bagging and random forests? We will try this with Spam dataset
+
+```{r}
+spam.train <- read.csv("spam.train.csv")
+spam.train$spam<-as.factor(spam.train$spam)
+spam.test  <- read.csv("spam.test.csv")
+spam.test$spam<-as.factor(spam.test$spam)
+summary(spam.train)
+```
+
+We can't really do much in the way of visualizations on this data set, but we can at least look at how many spams we have and don't have.
+
+```{r}
+table(spam.train$spam)
+```
+
+Couple of things I really like about this dataset. 
+
+1) Spam and non-spam almost split down the middle
+2) There are SOOOOO many variables. And all of them are numeric. Neat!
+
+```{r}
+###############################################
+#
+# Classification example: spam. There the pruned tree had a misclassification
+# rate of about 9% on the test set:
+#
+spam.rp2 <- rpart (spam ~ ., data = spam.train, cp = .0001)
+spam.rp  <- prune.rpart (spam.rp2, cp = .0035) # as an example
+
+(tbl <- table (spam.test$spam, predict (spam.rp, spam.test, type = "class")))
+1 - sum (diag(tbl)) / sum (tbl)
+(tbl <- table (spam.test$spam, predict (spam.rp2, spam.test, type = "class")))
+1 - sum (diag(tbl)) / sum (tbl)
+#
+# Let's try bagging.
+#
+
+spam.bag <- bagging (spam ~ ., data = spam.train) # default 25 trees
+#
+# You get the "out-of-bag" estimate unless you specify "newdata"
+# explicitly. This OOB estimate should be more "honest" on the training
+# set The "usual" training set predictions are 'way overfit. If you're
+# evaluating your model on the test set, it doesn't much matter.
+#
+(tbl <- table (spam.train$spam, newdata = predict (spam.bag)))
+1 - sum (diag(tbl)) / sum (tbl)
+(tbl <- table (spam.train$spam, newdata = predict (spam.bag, spam.train))) # overfit
+1 - sum (diag(tbl)) / sum (tbl)
+#
+# That second one *has* to be overfit. How does we do on the test set? 
+#
+(tbl <- table (spam.test$spam, predict (spam.bag, spam.test)))
+1 - sum (diag(tbl)) / sum (tbl)
+#
+# Quite an improvement over 9%. How about random forests?
+#
+spam.rf <- randomForest (spam ~ ., data = spam.train, ntree = 500)
+(tbl <- table (spam.test$spam, predict (spam.rf, spam.test)))
+1 - sum (diag(tbl)) / sum (tbl)
+
+#
+# Even better!
+#
+
+```
+
+# Random Forest with the Default Dataset.
+## Step 4: Build a Random Forest Model
+Fitting a random forest model in R using the randomForest package is a simple extension of the syntax we’ve been using for all of the model fitting. As an aside, for each of these models, you can learn about the models by typing a question mark into the command line followed by the command you want to investigate. For example, type the following into your command line: ?randomForest.
+
+You will see that in the lower right window of your RStudio instance, you get a report that tells you about all of the parameters you can adjust for your models. In this course, we are not going in depth into the tuning of the models we are fitting (this is just an overview course), but to become truly proficient in data science you should understand all of these parameters and how to adjust them appropriately.
+
+For this example, we are going to accept the package defaults, get information about the predictor variable importance (importance = TRUE), and fit 500 trees (ntrees = 500).
+
+```{r}
+# Applyrandom forests model having default target and rest as predictors
+RandomForest <- randomForest(default ~ ., data=LectureTrain, importance = TRUE, ntrees = 500)
+summary(RandomForest)
+```
+
+Now, let’s do the performance summaries on the test dataset that are becoming standard (visualization and confusion matrix statistics).
+
+```{r}
+
+# Summarize and plot the performance of the random forest model
+
+# Get the probability of "yes" for default from second column
+predProbRF <- predict(RandomForest, newdata = LectureTest, type = "prob")[,2]
+
+# Get the predicted class
+predClassRF <- predict(RandomForest, newdata = LectureTest, type = "response")
+
+
+# Add to our plotting dataframe
+LectureTestPlotting$predProbRF <- predProbRF
+LectureTestPlotting$predClassRF <- predClassRF
+
+## Plot the RF Probability
+plotProbRF <- ggplot(data = LectureTestPlotting,
+                      mapping = aes(x = balance, y = income, color = predProbRF, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_gradient(low = "blue", high = "red") +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Predicted Probability for RF Model")
+
+# Plot the RF Class
+plotClassRF <- ggplot(data = LectureTestPlotting,
+                        mapping = aes(x = balance, y = income, color = predClassRF, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Predicted Class for RF Model")
+
+# Standard Performance Plot
+grid.arrange(plotTest, plotProbRF, plotClassRF, nrow = 3)
+```
+
+```{r}
+# Report confusion matrix from on the test dataset
+confusionMatrix(predClassRF , LectureTest$default)
+
+```
+
+Save your stuff!

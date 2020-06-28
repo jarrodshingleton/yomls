@@ -1,0 +1,556 @@
+---
+title: "(Univariate) Time Series Tutorial: Welcome to Chiraq"
+author: "LTC Jarrod Shingleton and Dr. Sam Huddleston"
+date: "4/16/2020"
+output: html_document
+---
+
+# Introduction
+
+“So, when did Chicago all of a sudden become ‘Chiraq’? Well, it all started when, about a year ago, the FBI released the crime statistics of various cities in America. Among the cities with the highest murder rates was Chicago. As a matter of fact, Chicago was the city with the highest murder rate. It was so high that it even surpassed the murder rate in Iraq, giving Chicago the nickname of ‘Chiraq’.”
+
+Source: http://thechiraqmovement.weebly.com/the-role-of-media-in-chiraq.html 1 May 2015 (Depricated)
+
+The rise of the media narrative around #Chiraq provides a situation many a military leader is familiar with: government officials responsible for security for a given geographic region must defend their record. This can be an uncomfortable position. As Charlie LeDuff reports in a June 24, 2015, Vice News Article titled “Guns, Money, Death, and the Dude - Welcome to Chiraq”:"
+
+Adding to the dissonance is Chicago’s Superintendent of Police, Garry McCarthy. When asked recently about the violence, McCarthy got snippy with the press. “There are a lot less shooting than there were last year,” he said. “I don’t know if you are aware of that.” Actually, shootings in the city have risen by about 20 percent. That’s according to numbers supplied by McCarthy’s own Chicago Police Department.
+
+As ORSAs supporting war and TAA campaigns around the globe, we are often called upon to assess and defend the progress of a campaign using statistical approaches. This tutorial uses real-world crime data and a situation analogous to a military security campaign to provide a brief overview on how the R programming language can be used to conduct some basic trend analysis and forecasting in support of a military campaign.
+
+In this tutorial, we’ll cover:
+
+- Reading and Formatting Time Series Objects into R
+- Time Series Data (Interactive) Visualizations
+- Components of Time Series (Seasonal Decomposition)
+- Trend Analysis
+- Forecasting Model Performance Assessment
+- Basic Forecasting Models
+- Key Forecasting Principles
+
+## The Data
+
+The City of Chicago is a leader in providing data transparency in government. They provide many public datasets on their web portal. The data used for this tutorial can be downloaded from:
+
+https://data.cityofchicago.org/Public-Safety/Crimes-2001-to-present/ijzp-q8t2
+
+We downloaded the homicide data used for this analysis from the city’s portal on 15 October 2015. This data is provided in the data file titled “ChicagoHomicides.csv”.
+
+## Setting up and Reading in Data
+
+The first step in this tutorial is to set up the analysis environment. The commands below import the needed R packages and load the package library commanding into memory for use.
+
+```{r, message=FALSE}
+
+##if you are on the AWS machine, you will need to run this:
+#install.packages(c("forecast", "lubridate"))
+##if you want to, you CAN load plotly, but it takes a while. It is a big package. Load it on you
+##own machine if you want.
+
+##if on your own machine, you might have to install other libraries
+
+library(ggplot2)
+library(dplyr)
+library(plotly)  #DO NOT RUN THIS ON AWS unless you REALLY want to.
+library(lubridate)
+library(forecast)
+
+```
+
+The next step is to set the working directory to where you have saved the "ChicagoHomicides.csv" file. You can do this from the command line with the *setwd()* function, or you can use your RStudio menu: Session->Set Working Directory.
+
+The *str()* command is used to reveal the structure of your data. It lets you quickly scan through your data to see what kind of information is contained in the data file (character, floating point, etc.) and gives you a quick view of the first few rows of the data frame. Once your working directory is set, read in your data and use the *str()* command to evaluate it.
+
+```{r}
+RawData<-read.csv("ChicagoHomicides.csv",stringsAsFactors=F) #this means that strings will be characters, 
+#not strings in the dataframe.
+str(RawData)
+```
+
+Taking a quick look through the data, we can see that these are homicide records, with each row recording an individual homicide. To get a count of the homicides, we need to create a time series of the object. **A time series is a colleciton of random variables indexed according to the order they are observed in time**. (Shumway & Stoffer 2014) We can use the *as.Date* function to convert the character vector "Raw.Data$Date" (the Date column in the Raw.Data matrix) to date objects (i.e., R will now recognize that this describes dates). We are going to aggregate the data by day using the *lubridate* and *dplyr* packages. We can then quickly sort the data by day, month, and year (see below).
+
+```{r}
+RawData$Date<-as.Date(RawData$Date, format="%m/%d/%Y %H:%M:%S")
+
+SeriesByMonth<-RawData %>% 
+    group_by(Date=floor_date(Date, "month")) %>%
+    summarize(homicides=n())
+
+SeriesByYear<-RawData %>% 
+    group_by(Date=floor_date(Date, "year")) %>%
+    summarize(homicides=n())
+
+SeriesByDay<-RawData %>% 
+    group_by(Date=floor_date(Date, "day")) %>%
+    summarize(homicides=n())
+
+SeriesByDay
+```
+
+Calling the *SeriesByDay* variable (typing it in the command line) provides a quick summary of the data table (the first ten rows of the resulting table). Do the same of *SeriesByYear* and *SeriesByMonth* variables.
+
+One note about the *SeriesByDay* data table. There are some days missing - this is a table of observed records, not a time series. To create a time series, we need to insert the missing dates into the time series.
+
+This code block creates a time series containing the missing dates and using the *seq()* function to generate a sequence of dates and then left joins the actual homicide totals together. If there is no value, we will insert 0 in the data table.
+
+```{r}
+
+##this is going to be our finished dataframe. We start by adding every day
+##we need in a column called "Date"
+HomicidesByDay<-data.frame(Date=seq(min(SeriesByDay$Date), max(SeriesByDay$Date), 1))
+
+##Now we left join on SeriesByDay. Any blanks will be NA
+HomicidesByDay<-left_join(HomicidesByDay, SeriesByDay)
+
+##Finally, if NA, make them zero!
+HomicidesByDay$homicides[is.na(HomicidesByDay$homicides)]<-0
+
+```
+
+# Time Series Data (Interactive) Visualizations
+
+Finally, we are getting somewhere. Let's now take a look at our first time series using a web-browser visualization. **Data visualizations are graphics that use "computer-supported, interactive, visual respresentations of data to amplify cognition."** (Fry, 2004)  We will use the *ggplot2* and *plotly* packages to generate interactive HTML plots of our data. The library *ggplot2* makes very nice graphics using a layering system and *plotly* makes them interactive.
+
+```{r}
+# cols<-c("Homicides"="dark red")  used for legend. Will use later.
+g<-ggplot(HomicidesByDay)+geom_bar(aes(x=Date, y=homicides), col="dark red", stat="identity")+
+  # scale_fill_manual(name="",values=cols)+
+  ggtitle("Daily Chicago Homicides 2001-2020")+
+  ylab("Chicago Homicides")+xlab("Date")+theme_bw()+ggtitle("Daily Chicago Homicides 2001 - 2020")
+ggplotly(g)
+```
+
+Take a minute to interact with this data visualization. The graph should provide data summaries on mouse hover. Note that you can also "click and drag" to zoom into specific areas of the chart.
+
+One thing we can note about daily homicide rates is that they are very noisy - moving up and down dramatically on a daily basis. There don't seem to be any observable patterns. While we could do the math, from inspection it is fairly easy to tell that we are not going to be likely to build a good time series model for daily homicide raters. A general rule of thumb in security forecasting is that you need to be able to provide a forecast/model with less than 20% error on average (Gorr, Olligshlaeger, & Thompson 2003). However, aggregating at the monthly level provides a different picture.
+
+**Note: We do not have to worry about filling in the blanks for months. There are no months free from homicides. Wouldn't that be a nice world!?**
+
+First, we need to make the table: *SeriesByMonth.* I am going to use *lubridate* and *dplyr* here.
+```{r}
+SeriesByMonth<-SeriesByDay
+day(SeriesByMonth$Date)<-1
+SeriesByMonth<-SeriesByMonth%>%
+  group_by(Date)%>%
+  summarize(homicides=sum(homicides))
+
+```
+
+Now for the graph.
+```{r}
+cols<-c("Homicides"="red") #need for legend.
+g<-ggplot(SeriesByMonth)+geom_bar(aes(x=Date, y=homicides, fill="Homicides"), stat="identity")+
+  scale_fill_manual(name="",values=cols)+
+  ylab("Chicago Homicides")+xlab("Date")+theme_bw()+ggtitle("Monthly Chicago Homicides 2001 - 2020")+
+  theme(legend.position='bottom', legend.box = "horizontal")
+ggplotly(g)
+
+```
+
+# Components of a Time Series
+
+taking a look at this chart, we can observe the components of a time series.
+
+There are four time series components:
+
+- Trend
+- Seasonal Effects
+- Cycle
+- Noise
+
+The trend component represents the growth or decline in a time series over an extended period of time. While there is some trend in this data, it does not seem to be a strong effect. The seasonal effects are strong and obvious. The data cycles up and down over the course of a year. Cycles describe multi-year long-term up and down movements such as the bear/bull cycle in the stock market or the long-term up and down fluctuations in real-estate markets (they don't have much to do with crime time series). Noise components are what is left after we account for the other components in a time series( the difference between our model and observations).
+
+R provides functions for extracting the trend, seasonal, and noise components of a time series using the *forecast* package. The *stl()* function provides seasonal decomposition and then uses loess functions to fit a trend line. To learn more about seasonal decomposition, review the chapter on it from Rob Hyndeman's excellent online book on forecasting, which can be found at: https://www.otexts.org/book/fpp.
+
+The code block below builds a seasonal decomposition model from the monthly time series and then plots the extracted components.
+
+```{r}
+
+SeriesByMonthTS<-ts(SeriesByMonth$homicides, start=c(2001,1), freq=12)
+SeasonalModel<-stl(SeriesByMonthTS, s.window="periodic")
+plot(SeasonalModel)
+```
+
+# Trend Analysis
+
+Looking at this plot, we can already see that the homicide rate appears to be trending up between 2015 and 2017. Let's build a better visualization that will allow us to take a closer look. First, we'll need to extract the components of a time series from our model. The code block below pulls out the trend and seasonal components of the additive seasonal decomposition model that has been built.
+
+```{r}
+SeasonalModelTrend<-as.vector(SeasonalModel$time.series[,2])
+SeasonalModelSeasons<-SeasonalModel$time.series[,1][1:12]
+SeasonalFit<-as.vector(SeasonalModelTrend+as.vector(SeasonalModel$time.series[,1]))
+head(SeasonalModel$time.series)
+```
+
+The *SeasonalModelSeasons* variable now stores the seasonal effects (the first column in the model form the fit). The *SeasonalModelTrend* variable stores the second column. The *head()* command lets us look at the first few rows from the model. The SeasonalFit variable adds the seasonal effect and the trend together. Now, let's generate an interactive visualization and take a close look at how well this model fits and take a look at trends.
+
+```{r}
+SeriesByMonth<-as.data.frame(SeriesByMonth)
+SeriesByMonth$seasonal<-SeasonalFit
+SeriesByMonth$trend<-SeasonalModelTrend
+
+cols<-c("Homicides"="red", "Trend Line"="black", "Fit Line"="grey38") #need for legend.
+g<-ggplot(SeriesByMonth)+geom_bar(aes(x=Date, y=homicides, fill="Homicides"), stat="identity")+
+  geom_line(aes(x=Date, y=seasonal,colour="Fit Line"))+
+  geom_line(aes(x=Date, y=trend, colour="Trend Line"))+
+  scale_fill_manual(name="",values=cols)+
+  scale_colour_manual(name="", values=cols)+
+  ylab("Chicago Homicides")+xlab("Date")+theme_bw()+ggtitle("Monthly Chicago Homicides 2001 - 2020")+
+  theme(legend.position='bottom', legend.box = "horizontal")
+ggplotly(g)
+
+```
+
+Using this cart (hover using your mouse), we can see that homicides increased from 49 in June 2015 to 80 in June 2016, an increase of almost 40%. Things were not looking so good for the Chicago Police commissioner! The general trend supports this view as well. We can see a steady trend upwards over the course of the year from the summer of 2014 to the summer of 2016. The trend fit moves from 43 to 66, reflecting a running estimate of the long-term average.
+
+# Forecasting Model Performance Assessment
+
+The trend and fit lines in the graph above are based on a model, which has some error. This raises a natural question. How confident can we be that the model we have fit to describe the trend is accurate? While there are many different statistics used to evaluate forecasting models, the two that are most useful for evaluating performance in a security setting are Mean Absolute Percentage Error (MAPE) and Mean Absolute Scaled Error (MASE). With *Y* denoting observations from the time series, *F* denoting model forecasts, and *i* indexing the time series from time 1 to *N*, the formulas for these statistics are:
+
+- Mean Absolute percentage error (MAPE):
+
+$MAPE=\frac{1}{n}\sum_{i=1}^N\frac{|Y_i-F_i|}{Y_i}$
+
+- Mean Absolute Scaled Error (MASE):
+
+$MASE=\frac{\frac{1}{n}\sum_{i=1}^N|Y_i-F_i|}{\frac{1}{n}\sum_{i=1}^N|Y_i-Y_{i-12}|}$
+
+MAPE is a straightforward statistic. It shows the average percentage error in the model fit. MASE requires a bit more explanation as it scales the model error by the performance of a *Naive Model*. The Naive model is frequently used by police agencies in the absence of a forecasting method. The most basic Naive models simply assumes that the best forecast for time period *i* +1 is what is observed during time *i* or "what happens today is probably what will happen tomorrow." In the case of monthly crime in a city with extreme weather effects such as Chicago, the more often used assumption is: "what happened in June last year is what will happen in June this year." MASE scales forecasting model performance against this Naive model's performance (hence the $Y_{i-12}$ variable in the denominator of the MASE formula above). A MASE score less than 1 indicates a model that improves on this most often used approach in policing.
+
+The code blocks below calculate the MAPE and the MASE for our additive seasonal effects model.
+
+```{r}
+SeasonalDecompMAPE<-mean(abs(SeriesByMonthTS-SeasonalFit)/SeriesByMonthTS)
+SeasonalDecompMAPE
+
+#here, we are considering the season as 12 months
+
+SeasonalDecompMASE<-mean(abs(SeriesByMonthTS[13:length(SeriesByMonthTS)]-SeasonalFit[13:length(SeasonalFit)]))/mean(abs(SeriesByMonthTS[13:length(SeriesByMonthTS)]-SeriesByMonthTS[1:(length(SeriesByMonthTS)-12)]))
+SeasonalDecompMASE
+```
+
+As we can see, the MAPE for this model is about 13.7%, indicating a good fit. From this, we can infer that the fitted trend line reasonably describes trends we are observing.
+
+# Basic Forecasting Models
+
+In addition to describing trends, we can also use the seasonal decomposition model we've built to forecast future values. To forecast future values, we use the *forecast()* function. The forecast function provides upper and lower confidence bands for future values. The code below generates a two year forecast projection from May 2020 (the first month for which we don't have observations).
+
+```{r}
+
+SeasonalForecast<-forecast(SeasonalModel, method='naive')
+plot.ts(SeasonalForecast$mean, ylim=c(-50,150), lwd=2,       # PlotForecast
+        main='Seasonal Model 2 Year Forecast')              
+lines(SeasonalForecast$lower[,1], lwd=2, lty=2)            # 80% PI 
+lines(SeasonalForecast$upper[,1], lwd=2, lty=2)            # 80% PI 
+lines(SeasonalForecast$lower[,2], lwd=1, lty=2)            # 90% PI
+lines(SeasonalForecast$upper[,2], lwd=1, lty=2)            # 90% PI
+```
+
+Note the high level of uncertainty in the forecast going forward. Note also that our **uncertainty about the forecast grows over the forecast horizon.** We are much less sure about the forecast a year from now that we are for the next month.
+
+The code block below maps our uncertain forecast onto our previous interactive chart. Note that the *ggplot2* package allows you to add layers with different data sets to the graph.
+
+```{r}
+
+ForecastData<-data.frame(Date=seq.Date(from=max(SeriesByMonth$Date), by='month',length.out=12),
+               Forecast=SeasonalForecast$mean[1:12],
+               Lower=SeasonalForecast$lower[1:12,1],
+               Upper=SeasonalForecast$upper[1:12,1])
+
+
+cols<-c("Homicides"="red", "Seasonal Fit"="black", "Forecast"="grey38", "80% Forecast Interval"="grey") #need for legend.
+g<-ggplot(SeriesByMonth)+
+  geom_bar(aes(x=Date, y=homicides, fill="Homicides"), stat="identity")+
+  geom_line(aes(x=Date, y=seasonal,colour="Seasonal Fit"))+
+  geom_line(data=ForecastData, aes(x=Date, y=Forecast, colour="Forecast"))+
+  geom_ribbon(data=ForecastData, aes(x=Date,ymin=Lower, ymax=Upper, colour="80% Forecast Interval"), linetype=2, alpha=0.1)+
+  scale_fill_manual(name="",values=cols)+
+  scale_colour_manual(name="", values=cols)+
+  ylab("Chicago Homicides")+xlab("Date")+theme_bw()+ggtitle("Monthly Chicago Homicides 2001 - 2020")+
+  theme(legend.position='bottom', legend.box = "horizontal")+
+  coord_cartesian(ylim = c(0, 100), xlim = c(min(SeriesByMonth$Date),max(ForecastData$Date))) 
+ggplotly(g)
+```
+Right about now, something should be occurring to you. This model seems to be a lot more uncertain going forward than it seemed to be looking backwards. **A key point to understand about seasonal decomposition, and forecasting models ni general, is taht they perform much better at fitting the traning dataset (past observations ) than they do at forecasting the test dataset (future observations).** To really understand how well a model does at forecasting future observations, we need to evaluate the model's performance over a test data set of observations it hasn't used to fit the model. We do this with a rolling horizon performance evaluation.
+
+A rolling horizon model works as follows. Seasonal models require at least three years of data to fit. So, we build a model using three years of observation and then forecast from that point. So, we will fit using data from 2001 - 2003, and then forecast what we expect to see for the year 2004. The code block below uses the rolling horizon approach to repeatedly forecast the future using the seasonal decomposition model we built for each month from 2004 through April 2020. The results are stored in a vector that we will use to plot later.
+
+```{r}
+dfcounter<-1
+for(i in 37:length(SeriesByMonthTS)){
+  TrainingSeries<-ts(SeriesByMonthTS[1:(i-1)], start=c(2001,1), freq=12)
+  NaiveForecast<-as.vector(SeriesByMonthTS[(i-12):(i-1)])  #12 month forecast
+  SeasonalModel<-stl(TrainingSeries, s.window="periodic")
+  SeasonalForecast<-as.vector(forecast(SeasonalModel, method='naive')$mean)[1]
+  Observed<-SeriesByMonthTS[i]
+  NaiveForecastError<-Observed-NaiveForecast[1] 
+  SeasonalForecastError<-SeasonalForecast-Observed
+  if(i==37){
+    ForecastResults=data.frame(Date=SeriesByMonth$Date[i],
+                               Observed=Observed,
+                               Naive=NaiveForecast[1],
+                               Seasonal=SeasonalForecast[1],
+                               NaiveError=NaiveForecastError,
+                               SeasonalError=SeasonalForecastError)
+    dfcounter<-dfcounter+1
+  } else {
+    ForecastResults<-rbind(ForecastResults,
+                           data.frame(Date=SeriesByMonth$Date[i],
+                                      Observed=Observed,
+                                      Naive=NaiveForecast[1],
+                                      Seasonal=SeasonalForecast[1],
+                                      NaiveError=NaiveForecastError,
+                                      SeasonalError=SeasonalForecastError))
+  }
+}
+```
+
+The next code block pulls up our predictive performance in to a table format.
+
+```{r}
+
+Seasonal1StepMAPE<-mean(abs(ForecastResults$SeasonalError/ForecastResults$Observed))
+Seasonal1YrMAPE<-mean(abs(ForecastResults$SeasonalError[1:130])/ForecastResults$Observed[1:130])
+Seasonal1StepMASE<-mean(abs(ForecastResults$SeasonalError))/mean(abs(ForecastResults$NaiveError))
+Seasonal1YrMASE<-mean(abs(ForecastResults$SeasonalError[1:130]))/mean(abs(ForecastResults$NaiveError[1:130]))
+
+SeasonalDecompMASE<-mean(abs(SeriesByMonthTS[13:length(SeriesByMonthTS)]-
+                               SeriesByMonth$seasonal[13:length(SeriesByMonthTS)]))/mean(abs(SeriesByMonthTS[13:length(SeriesByMonthTS)]-
+                                                                                               SeriesByMonthTS[1:(length(SeriesByMonthTS)-12)]))
+
+SeasonalFittedPerformance<-c(SeasonalDecompMAPE, SeasonalDecompMASE)
+SeasonalForecastPerformance1<-c(Seasonal1YrMAPE, Seasonal1YrMASE)
+PerfMatrix1<-rbind(SeasonalFittedPerformance, SeasonalForecastPerformance1)
+rownames(PerfMatrix1)<-c("Seasonal Fitted", "Seasonal Forecast (Rolling Horizon 1 Step)")
+colnames(PerfMatrix1)<-c("MAPE", "MASE")
+PerfMatrix1
+```
+
+What we see is that while the MAPE performance of the model when fitting past observations is about 13.7%, the performance in forecasting the *next* month (one step ahead) is about 23%, much worse. The *forecasting* performance of this model:
+
+- Does not meet out < 20% rule of thumb, and
+- Is almost twice as bad at forecasting as it was for fitting past observations.
+
+This model isn't accurate enough for general forecasting use (although it does provide good trend analysis performance). Let's explore some other basic forecasting models. The most commonly employed forecasting models are:
+
+- Naive model
+- Seasonal Decomposition
+- Holt-Winters Exponential Smoothing (HW)
+- Auto-Regressive Integrated Moving Average (ARIMA)
+
+Detailed descriptions of each of these models is beyond the scope of this tutorial, but Rob Hyndman's online book on forecasting provides a good overview of each of these models and provides an in-depth discussion about all of the parameters that can be specified in the R programming language to fit them (including seasonal effects or not, different approaches for the needed optimization, etc.). Incidentally, Rob Hyndman is also the author of the *forecast* package we are using in this tutorial, so we strongly recommend reviewing his book before applying these models to a new data set.
+
+The code block below uses a rolling horizon design to fit a seasonal model to forecast every month from January 2004 to April 2020. We have already fit the Naive and Seasonal Decomposition models in the above chunks, so here we will just fit the HW and ARIMA models. This takes a LONNNNNGGGG time to run (over an hour) so we are not going to run it here. I ran it already and saved the data in a file called "ForecastResults.csv."
+
+```{r}
+# dfcounter<-1
+# for(i in 37:length(SeriesByMonthTS)){
+#   TrainingSeries<-ts(SeriesByMonthTS[1:(i-1)], start=c(2001,1), freq=12)
+#   HWmodel<-HoltWinters(TrainingSeries)
+#   HWForecast<-forecast(HWmodel)$mean[1]
+#   ARIMAmodel<-auto.arima(TrainingSeries)
+#   ARIMAForecast<-forecast(ARIMAmodel)$mean[1]  #12 month forecast
+#   Observed<-SeriesByMonthTS[i]
+#   HWForecastError<-Observed-HWForecast
+#   ARIMAForecastError<-Observed-ARIMAForecast
+#   if(i==37){
+#     ForecastResults2=data.frame(Date=SeriesByMonth$Date[i],
+#                                       HW=HWForecast[1],
+#                                       ARIMA=ARIMAForecast[1],
+#                                       HWError=HWForecastError,
+#                                       ARIMAError=ARIMAForecastError)
+#     dfcounter<-dfcounter+1
+#   } else {
+#     ForecastResults2<-rbind(ForecastResults2,
+#                            data.frame(Date=SeriesByMonth$Date[i],
+#                                       HW=HWForecast[1],
+#                                       ARIMA=ARIMAForecast[1],
+#                                       HWError=HWForecastError,
+#                                       ARIMAError=ARIMAForecastError))
+#   }
+# }
+
+ForecastResults<-read.csv("ForecastResults.csv", stringsAsFactors = FALSE)
+ForecastResults$Date<-as.Date(ForecastResults$Date)
+```
+
+Once this code is run (it will take a while), take a look at the outputs by calling the variables you've created (try ARIMAmodel, ARIMAForecast, ARIMAForecastErrors, and ARIMA1StepForecast) to see the differences between the different formats (list, matrix, and vector). **Note: if you did not run the for loop, you will NOT HAVE THESE VARIABLES!**
+
+The code block below creates an interactive plot that includes all of the forecasts (you can turn the plots of the series on and off by clicking on the series on the legend at the bottom). Take a look at the differences between the forecasts.
+
+```{r}
+cols<-c("Homicides"="red", "Seasonal"="grey38", "ARIMA"="blue", "Holt-Winters"="green") #need for legend.
+g<-ggplot(SeriesByMonth[37:dim(SeriesByMonth)[1],])+
+  geom_bar(aes(x=Date, y=homicides, fill="Homicides"), stat="identity")+
+  geom_line(data=ForecastResults, aes(x=Date, y=Seasonal, colour="Seasonal"))+
+  geom_line(data=ForecastResults, aes(x=Date, y=ARIMA, colour="ARIMA"))+
+  geom_line(data=ForecastResults, aes(x=Date, y=HW, colour="Holt-Winters"))+
+  scale_fill_manual(name="",values=cols)+
+  scale_colour_manual(name="", values=cols)+
+  ylab("Chicago Homicides")+xlab("Date")+theme_bw()+ggtitle("Monthly Chicago Homicides 2001 - 2020")+
+  theme(legend.position='bottom', legend.box = "horizontal")
+  # coord_cartesian(ylim = c(0, 100), xlim = c(min(SeriesByMonth$Date),max(ForecastData$Date))) 
+ggplotly(g)
+
+```
+
+It's pretty hard to tell from the plots which model is performing the best. We'll have to calculate performance using MASE and MAPE. The code block below calculates MASE and MAPE performance over two different periods. First, we calculate the performance in one-step ahead forecasting (1-Step) and we also calculate forecasting performance for predicting the next year (12-Step or 1-YR).
+
+```{r}
+### Calculate MAPE Performance for 1 Step and 1 YR Forecasts
+
+Naive1StepMAPE<-mean(abs(ForecastResults$NaiveError)/ForecastResults$Observed)
+Naive1YrMAPE<-mean(abs(ForecastResults$NaiveError[1:192])/ForecastResults$Observed[1:192])  #Full years end in 2019
+Seasonal1StepMAPE<-mean(abs(ForecastResults$SeasonalError)/ForecastResults$Observed)
+Seasonal1YrMAPE<-mean(abs(ForecastResults$SeasonalError[1:192])/ForecastResults$Observed[1:192])  #Full years end in 2019
+HW1StepMAPE<-mean(abs(ForecastResults$HWError)/ForecastResults$Observed)
+HW1YrMAPE<-mean(abs(ForecastResults$HWError[1:192])/ForecastResults$Observed[1:192])  #Full years end in 2019
+ARIMA1StepMAPE<-mean(abs(ForecastResults$ARIMAError)/ForecastResults$Observed)
+ARIMA1YrMAPE<-mean(abs(ForecastResults$ARIMAError[1:192])/ForecastResults$Observed[1:192])  #Full years end in 2019
+
+
+####### Calculate MASE Performance
+Seasonal1StepMASE<-mean(abs(ForecastResults$SeasonalError))/mean(abs(ForecastResults$NaiveError))
+Seasonal1YrMASE<-mean(abs(ForecastResults$SeasonalError[1:192]))/mean(abs(ForecastResults$NaiveError[1:192]))
+HW1StepMASE<-mean(abs(ForecastResults$HWError))/mean(abs(ForecastResults$NaiveError))
+HW1YrMASE<-mean(abs(ForecastResults$HWError[1:192]))/mean(abs(ForecastResults$NaiveError[1:192]))
+ARIMA1StepMASE<-mean(abs(ForecastResults$ARIMAError))/mean(abs(ForecastResults$NaiveError))
+ARIMA1YrMASE<-mean(abs(ForecastResults$ARIMAError[1:192]))/mean(abs(ForecastResults$NaiveError[1:192]))
+
+# Create the table rows
+NaivePerformance<-cbind(Naive1StepMAPE, Naive1YrMAPE, 1, 1)
+SeasonalPerformance<-cbind(Seasonal1StepMAPE, Seasonal1YrMAPE, Seasonal1StepMASE, Seasonal1YrMASE)
+HWPerformance<-cbind(HW1StepMAPE, HW1YrMAPE, HW1StepMASE, HW1YrMASE)
+ARIMAPerformance<-cbind(ARIMA1StepMAPE, ARIMA1YrMAPE, ARIMA1StepMASE, ARIMA1YrMASE)
+
+# Create the table for display
+PerformanceMatrix<-rbind(NaivePerformance, SeasonalPerformance, HWPerformance, ARIMAPerformance)
+PerformanceMatrix<-signif(PerformanceMatrix, 2)
+PerformanceMatrix<-cbind(c("Naive", "Seasonal Decomposition", "Holt-Winters", "ARIMA"), PerformanceMatrix)
+PerformanceMatrix<-data.frame(PerformanceMatrix)
+colnames(PerformanceMatrix)<-c("Model", "1 Step MAPE", "12 Step MAPE", "1 Step MASE", "12 Step MASE")
+PerformanceMatrix
+
+```
+
+Looking at our performance comparison, we can see that the Holt-Winters model delivers acceptable performance for short-term forecasting performance (<20% MAPE) and even hangs on for long-term forecasting. There is one more basic model that we can try that may offer some performance improvement, but at a cost. Carefully observing the plot of our short-term forecasts above, you can see that for the vast majority of time periods, at least one of the three statistical models (seasonal, HW, or ARIMA) forecasts for each period is pretty good. One technique that can sometimes improve forecasting (prediction) in these situations is the use of *ensemble modeling*. Ensemble models simply combine the results of different models together (via voting or averaging) to create a combined model. The code block below creates a simple (via averaging) ensemble model from the other forecasts and then calculates the summary statistics. It also recreates the performance table to summarize our results.
+
+```{r}
+# Build and Evaluate an Ensemble Forecast
+
+Ensemble1StepForecast<-(ForecastResults$Seasonal + ForecastResults$HW + ForecastResults$ARIMA)/3
+EnsembleError<-ForecastResults$Observed-Ensemble1StepForecast
+Ensemble1StepMAPE<-mean(abs(EnsembleError)/ForecastResults$Observed) 
+Ensemble1YrMAPE<-mean(abs(EnsembleError[1:192])/ForecastResults$Observed[1:192]) 
+Ensemble1StepMASE<-mean(abs(EnsembleError))/mean(abs(ForecastResults$NaiveError))
+Ensemble1YrMASE<-mean(abs(EnsembleError[1:192]))/mean(abs(ForecastResults$NaiveError[1:192]))
+
+# Building rows of table again
+NaivePerformance<-cbind(Naive1StepMAPE, Naive1YrMAPE, 1, 1)
+SeasonalPerformance<-cbind(Seasonal1StepMAPE, Seasonal1YrMAPE, Seasonal1StepMASE, Seasonal1YrMASE)
+HWPerformance<-cbind(HW1StepMAPE, HW1YrMAPE, HW1StepMASE, HW1YrMASE)
+ARIMAPerformance<-cbind(ARIMA1StepMAPE, ARIMA1YrMAPE, ARIMA1StepMASE, ARIMA1YrMASE)
+EnsemblePerformance<-cbind(Ensemble1StepMAPE, Ensemble1YrMAPE, Ensemble1StepMASE, Ensemble1YrMASE)
+
+# Building full table again
+PerformanceMatrix<-rbind(NaivePerformance, SeasonalPerformance, HWPerformance, ARIMAPerformance, EnsemblePerformance)
+PerformanceMatrix<-signif(PerformanceMatrix, 2)
+PerformanceMatrix<-cbind(c("Naive", "Seasonal Decomposition", "Holt-Winters", "ARIMA", 
+                            "Ensemble"), PerformanceMatrix)
+PerformanceMatrix<-data.frame(PerformanceMatrix)
+colnames(PerformanceMatrix)<-c("Model", "1 Step MAPE", "12 Step MAPE", "1 Step MASE", "12 Step MASE")
+PerformanceMatrix
+```
+
+We can see in the table above the ensemble model improves performance a bit. There is some slight improvement over the HW model in both short-and long-term forecasting.
+
+The code block below adds the ensemble forecast results to our previous comparison chart. Zoom in and take a look at how the ensemble model averages between the other approaches.
+
+```{r}
+ForecastResults$Ensemble<-Ensemble1StepForecast
+
+cols<-c("Homicides"="red", "Seasonal"="grey38", "ARIMA"="blue", "Holt-Winters"="green", "Ensemble"="black") #need for legend.
+g<-ggplot(SeriesByMonth[37:dim(SeriesByMonth)[1],])+
+  geom_bar(aes(x=Date, y=homicides, fill="Homicides"), stat="identity")+
+  geom_line(data=ForecastResults, aes(x=Date, y=Seasonal, colour="Seasonal"))+
+  geom_line(data=ForecastResults, aes(x=Date, y=ARIMA, colour="ARIMA"))+
+  geom_line(data=ForecastResults, aes(x=Date, y=HW, colour="Holt-Winters"))+
+  geom_line(data=ForecastResults, aes(x=Date, y=Ensemble, colour="Ensemble"))+
+  scale_fill_manual(name="",values=cols)+
+  scale_colour_manual(name="", values=cols)+
+  ylab("Chicago Homicides")+xlab("Date")+theme_bw()+ggtitle("Monthly Chicago Homicides 2001 - 2020")+
+  theme(legend.position='bottom', legend.box = "horizontal")
+  # coord_cartesian(ylim = c(0, 100), xlim = c(min(SeriesByMonth$Date),max(ForecastData$Date))) 
+ggplotly(g)
+
+```
+
+By interacting with the plot above, you can see the effect of the ensemble process. Ensemble models tend to improve performance overall because each modeling approach sometimes does quite poorly. The ensemble approach smooths things out by returning a "consensus opinion" between the different models.
+
+However, there is one significant shortcoming to this approach. Each of the other models is a statistical model with underlying theory and statistical properties. These properties allow us to estimate the confidence bands for future performance (see the plot of the forecast from the seasonal model above). The ensemble model is a "black box" approach. While it is possible to derive the statistical properties of the model and make estimates for uncertainty bands, to do so we'd have to do a great deal more analysis (well beyond the scope of this tutorial). In short, we can use the ensemble model to get good predictive estimates, but if it is important to have good measures of uncertainty for our forecasts over the forecast horizon, we are probably better off implementing a known statistical model (i.e., Holt-Winters in this case).
+
+# Practial Exercise and Analysis Results
+
+Now it is application time. Using the code above, see if you can generate a 12-month ahead forecast, including uncertainty bands, using the Holt-Winters forecast and plot it. This is a fairly advanced application of the code above, requiring you to fit a new model (using all observations through Apr 2020), use the model to forecast, and finally plot the results. If you are unsuccessful, you can take a look at the R code for this Markdown document.
+
+```{r, echo=FALSE}
+
+TrainingSeries<-ts(SeriesByMonthTS, start=c(2001,1), freq=12)
+HWmodel<-HoltWinters(TrainingSeries)
+HWForecast<-forecast(HWmodel)
+
+# ForecastDate<-max(SeriesByMonth$Date)
+# month(ForecastDate)<-month(ForecastDate)+1
+HWForecastData<-data.frame(Date=seq(from=max(SeriesByMonth$Date), by="month", length.out=12),
+                Pred=HWForecast$mean[1:12],
+                Upper=HWForecast$upper[1:12,1],
+                Lower=HWForecast$lower[1:12,1])
+
+cols <- c("Homicides"="red", "HW"="black", "Forecast"="grey")
+g<-ggplot(SeriesByMonth)+geom_bar(aes(x=Date, y=homicides, fill='Homicides'), stat="identity")+
+  geom_line(data=ForecastResults,aes(x=Date, y=HW, colour="HW"))+
+  theme(legend.position="right")+
+  scale_fill_manual(name="",values=cols)+
+  scale_colour_manual(name="",values=cols) +
+  geom_line(data=HWForecastData, aes(x=Date, y=Pred, colour="Forecast"))+
+  geom_ribbon(data=HWForecastData, aes(x=Date,ymin=Lower, ymax=Upper), linetype=2, alpha=0.1)+
+  ylab("Chicago Homicides")+xlab("Date")+theme_bw()+ggtitle("Monthly Chicago Homicides 2001 - 2020")
+ggplotly(g)
+
+```
+
+The chart above, and our previous trend analysis using seasonal decomposition, allows us (in our roles as analysts) to provide some insight/advice to the Chicago Police Commissioner.
+
+First, the (seasonal decomposition) trend chart suggests that things are trending for the worse. While homicide levels haven’t reached 2001 levels yet, they are definitely trending that way. Things have not gone well over the period from summer 2014 to summer 2015.
+
+Our Holt-Winters forecasting model suggests that this deteriorating conditions trend is likely to continue to get worse over the short term (compare the 2015-2016 forecast against the 2014-2015 observed values in the chart above). We expect the year over year (2015 vs. 2014) comparison for each month to go against us for the next several months at least. However, due to seasonal effects, the observed homicide crime rate should begin to drop. In short, things have been trending badly, the trend will get worse over the short term, but the monthly observed homicides will drop over the next few months (Through February 2016) due to seasonal the seasonal effect. If the current trend continues, the summer of 2016 will be even worse than the summer of 2015.
+
+“Welcome to Chiraq”
+
+# Key Forecasting Principles (Lessons Learned)
+The goal of this tutorial was to illustrate how time series analysis (using R and interactive visualizations) can contribute to the assessment of real-world security situations. There are several key forecasting principles that were illustrated in this tutorial:
+
+- Beware the missing data (observations)
+- Aggregation (often) helps
+- Forecasting performance (forward) is (much) worse than trend (backwards) performance
+- Short-terms forecasts are more accurate than long-term forecasts
+- Evaluate forecasting performance over rolling horizons in order to get the best estimate for actual use (use all your data!)
+- Ensemble models (can) improve performance (with some cost)
+
+It is important to note that this tutorial did not provide an education on the proper use of the statistical models illustrated. Rather, this tutorial was intended to show how to use R to implement statistical models you are already familiar with. You should never use models that you do not understand. Again, we recommend reviewing Rob Hyndman’s online text (see below) for a more in depth treatment of these models. The other references provided below are also suggested.
+
+# References
+
+- **Forecasting Models**
+- Hyndman, Rob and George Athanasopoulos (2013), Forecasting: Principles and Practice
+  - Online: https://www.otexts.org/book/fpp
+  - PDF: http://robjhyndman.com/uwafiles/fpp-notes.pdf
+- Shumway, Robert and David Stoffer (2014) Time Series Analysis and Its Applications: With R Examples
+  - Online: http://www.stat.pitt.edu/stoffer/tsa3/
+- **Crime Forecasting**
+- Gorr, Wilpen Gorr, Andreas Olligschlaegerb & Yvonne Thompsonc (2003) “Short Trem Forecasting of Crime,” International Journal of Forecasting, Volume 19, Issue 4, Pages 579–594
+  - PDF: http://www.sciencedirect.com/science/article/pii/S016920700300092X
+- Huddleston, S., J. Porter, and D. Brown (2015) “Improving forecasts for noisy geographic time series”, Journal of Business Research, Volume 68, Issue 8, Pages 1810–1818.
+  - PDF: http://www.sciencedirect.com/science/article/pii/S0148296315001587
+- **Visualization**
+- Fry, Benjamin (2004) Computational Information Design
+  - PDF: http://dspace.mit.edu/handle/1721.1/26913

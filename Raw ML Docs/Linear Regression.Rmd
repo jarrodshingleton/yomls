@@ -1,0 +1,124 @@
+---
+title: "Week 2 In Class Lab"
+author: "LTC Jarrod Shingleton"
+date: "3/29/2020"
+output: html_document
+---
+# Week 2 Practice in Lab
+## Step 1: Set the working directory for reading in files.
+setwd('/insert full path to your folder')
+Remember, if you can’t get the setwd (set working directory) function to work, try ?setwd to get some additional help.
+
+## Step 2: Read csv file from on-line source.
+You can read the data set from on-line as the cvs file in R
+
+```{r}
+Ads <- read.csv("http://faculty.marshall.usc.edu/gareth-james/ISL/Advertising.csv")
+#read.csv("/home/jsshingl1/data/Ads")
+summary(Ads)
+```
+
+## Step 3a: Estimating the coefficients for simple linear regression
+Now we will try to estimate the coefficients of the linear regression line. In order to estimate the coefficients we will use “lm” function. This function is already in the default R setting.
+
+In Ads dataset, we have five variables: X, TV, radio, newspaper, and sales. X is a label of each data point. TV is a budget for TV ads. radio is a budget for ads in ratio. newspaper is a budget for ads in newspapers. They are all in thousands of dollars. We, here, want to ask the following question: Is there a relationship between advertising budget and sales? To answer this question we will try to fit the data with a simple linear regression model. First we will try to see any linear relation between sales and TV ads. Here sales as y variable, response and TV as x variable, explanatory.
+
+```{r}
+lm.fit<-lm(sales~TV, data=Ads)
+summary(lm.fit)
+```
+
+If you want to print just estimates of coefficients…
+
+```{r}
+lm.fit<-lm(sales~TV, data=Ads)
+coef(lm.fit)
+```
+
+If you want to print the confidence intervals for each estimate, type:
+
+```{r}
+confint(lm.fit)
+```
+
+## Step 3b: Now let’s plot the regression line with the data points.
+The sales are stored in the fourth column of the dataset “Ads” which is a two dimensional array.
+
+```{r}
+head(Ads[,4])
+#or Ads$sales
+```
+
+Here Ads[,5] means the fifth column of the matrix “Ads”. If you want to access the fifth rows type Ads[5,] instead. Make sure the index starts from 1. NOT 0. In Python it starts 0. These numbers are set as a response variable.
+
+TV is stored in the first column of the matrix “Ads”.
+
+```{r}
+head(Ads$TV)
+```
+
+These values are set as an explanatory variable.
+
+In order to plot Ads\$TV as y axis and Ads\$sales as x axis using plot() function, type:
+
+```{r}
+plot(Ads$TV,Ads$sales)
+```
+
+Then we want to add a regression line in the plot. You will use abline() function
+
+```{r}
+lm.fit<-lm(sales~TV, data=Ads)
+plot(Ads$TV,Ads$sales)
+abline(lm.fit)
+```
+
+
+If you want to draw the residual lines as you have seen in the lecture you can type:
+
+```{r}
+lm.fit<-lm(sales~TV, data=Ads)
+plot(Ads$TV,Ads$sales)
+abline(lm.fit)
+pre <- predict(lm.fit) 
+segments(Ads$TV,Ads$sales, Ads$TV, pre, col="red")
+```
+
+## Step 4: Estimating the coefficients for multiple linear regression
+Now we will fit the data to multiple regression model. We will set TV, radio, and newspaper as explanatory variables, X1, X2, X3, and sales as a response variable, Y.
+To use lm() function for multiple linear regression, you have to set the model. To define we will do type “sales ~ TV+radio+newspaper”.
+
+```{r}
+lm.fit<-lm(sales~TV+radio+newspaper, data=Ads)
+summary(lm.fit)
+```
+
+For a short cut you can do
+
+```{r}
+lm.fit<-lm(sales~., data=Ads)
+summary(lm.fit)
+```
+
+What do you think the difference between “lm.fit<-lm(sales~TV+radio+newspaper, data=Ads)” and “lm.fit<-lm(sales~., data=Ads)”? In lm() function, if we type as “sales~.” then we are assigning ALL variables except sales as explanatory variables.
+
+What is your answers to the following questions?
+
+* Is at least one of the predictors X1, X2, . . . , Xp useful in predicting the response?
+
+\textcolor{red}{According to the p-value for the model ($p-value: < 2.2e-16$), at least one of the $\hat{b}_n$ coefficients is not equal to zero. Thus, maybe not all of them are useful (to be explored in the next question), but at least one of them is "useful" in predicting the response (dependent variable)}
+
+* Do all the predictors help to explain Y, or is only a subset of the predictors useful?
+
+\textcolor{red}{Only a subset of the predictors are useful. The independent variable "newspaper" has a very large p-value $(0.86)$. This implies that, with the inclusion of TV and radio in the model, newspaper is probably not very useful. The coefficient also makes me think that newspaper is not very useful, as it does not make sense that more advertising in newspaper decreases sales. I suspect that taking out either radio or TV will turn that coefficient positive and, as a matter of fact, that is what happens. Try it out.}
+
+* How well does the model fit the data?
+
+\textcolor{red}{There are two measures we have in our kit bag for "goodness of fit" of the model to the data: RSE and $R^2$. Without removing any of the variables (which we should remove "newspaper"), we have an RSE of 1.686 and an $R^2$ of 0.8972. Both of these suggest a good fit of the model to the data. We need to be careful using RSE, as it is a measure that can change magnitude based on our dependent variable, but the mean of sales is 14.0225 and the standard deviation of sales if 5.217, making me pretty confident of an RSE of 1.686 being very good. Make sure to check these measures after you remove newspaper. $R^2$ will decrease, but it should not decrease significantly.}
+
+* What does the coefficient for the newspaper variable suggest?
+
+\textcolor{red}{As inferred above, a negative coefficient seems odd when it comes to advertising versus sales. Why would advertising anywhere decrease sales? Even if the p-value was not so high, this would definitely make me question the inclusion of newspaper in the model. I might even go back to the sponsor and find out if the data had an error. Or, this could be something interesting.}
+
+Before moving on, perform the following three actions to save your work and prepare for the practical application:
+Save your workspace as “LectureExampleData1.RData” (By typing save.image(“LectureExampleData1.RData”) function)

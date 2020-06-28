@@ -1,0 +1,462 @@
+---
+title: "Week 7 In Class Lab"
+author: "Jarrod Shingleton"
+date: "5/10/2020"
+output: html_document
+---
+# Overview
+
+In this practical application exercise, you will:
+
+- Fit a KNN for the lecture (Default) dataset using provided code
+- Fit a classification tree for the lecture (Default) dataset using provided code
+Let’s get started!
+
+# K-Nearest Neighbor
+## Step 1: Set Up R Environment for Lecture Example Analysis
+Let’s begin by setting up our environment to continue with our lecture examples. Perform the following tasks:
+
+- Open the R notebook file you saved under the file name “LectureExampleData2” so that you can continue building out the lecture examples
+- Load the lecture examples workspace you saved under the file name “LectureExampleData2.RData” (load() function)
+
+You will also need to load the e1071 library for fitting SVM models and the other packages we have used previously.
+
+```{r, message=FALSE}
+# Package for fitting SVM
+library(e1071)
+library(dplyr)
+
+# New model libraries
+library(class) # new library for KNN modeling
+library(rpart) # new library for CART modeling
+
+# New package for making pretty pictures of CART trees
+library(rpart.plot)
+
+## Library for An Introduction to Statistical Learning with Applications in R
+library(ISLR)
+
+## Libraries for Plotting our Results
+library(ggplot2)
+library(gridExtra)
+
+## Library for confusion matrix
+library(caret)
+```
+
+## Step 2: Confirm Datasets Loaded and Visualize the Data
+Before fitting models, let’s make sure that our training and test datasets are loaded and build a quick visualization for comparing them.
+
+We will be using the previously split training and test datasets, the logistic regression model and the SVM model (tuned). If you do not, the code is below. Remember, you are just going to load the SVM tuned model, as you saw just how long it can take to load this thing!
+
+```{r}
+
+# Partition of data set into 80% Train and 20% Test datasets
+set.seed(123)  # ensures we all get the sample sample of data for train/test
+
+sampler <- sample(nrow(Default),trunc(nrow(Default)*.80)) # samples index 
+
+LectureTrain <- Default[sampler,]
+LectureTest <- Default[-sampler,]
+
+# Put the predicted probability and class (at 0.5 threshold) at the end of the dataframe
+# predProbLogit <- predict(LogitStep, type = "response", newdata = LectureTest)
+# predClassLogit <- factor(predict(LogitStep, type = "response", newdata=LectureTest) > 0.5, levels = c(FALSE,TRUE), labels = c("No","Yes"))
+
+# Create a plotting version of the Default dataset where we will store model predictions
+LectureTestPlotting <- LectureTest
+
+```
+
+```{r}
+# Testing data summary
+summary(LectureTest)
+## Plot Lecture Train Data
+plotTrain <- ggplot(data = LectureTrain,
+                   mapping = aes(x = balance, y = income, color = default, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Lecture Training Data")
+
+# Plot Lecture Test Data
+plotTest <- ggplot(data = LectureTest,
+                    mapping = aes(x = balance, y = income, color = default, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Lecture Test Data")
+grid.arrange(plotTrain, plotTest, nrow = 2)
+
+```
+
+We will be using the previously split training and test datasets, which should be stored in your workspace file as LectureTrain and LectureTest.
+
+## Step 3: Build a KNN
+We are going to use out default data set, but I want to do a slight detour with a data set that is a little more visual. Load up the admit.csv dataset. This is a dataset of people that were applying to various colleges and if they were admitted.
+
+```{r}
+admit<-read.csv("admit.csv")
+summary(admit)
+```
+
+Let's break it into training and test sets and separate the variables as the response and explanatory variables so that we can use knn() function.
+
+```{r}
+set.seed(123)
+sampler <- sample(nrow(admit),trunc(nrow(admit)*.80)) # samples index 
+train<-admit[sampler,]
+test<-admit[-sampler,]
+
+# Assigning the response 
+train.def <- as.factor(admit$admit[sampler])
+test.def <- as.factor(admit$admit[-sampler])
+
+# Assign explanatory variables
+train.gc <- admit[sampler,1:3]
+test.gc <- admit[-sampler,1:3]
+```
+
+```{r}
+set.seed(123)
+knn.1 <-  knn(train.gc, test.gc, train.def, k=1)
+knn.5 <-  knn(train.gc, test.gc, train.def, k=5)
+knn.11 <- knn(train.gc, test.gc, train.def, k=11)
+
+sum(test.def == knn.1)/length(test.def)  # For knn = 1
+
+sum(test.def == knn.5)/length(test.def) # For knn = 5
+
+sum(test.def == knn.11)/length(test.def)  # For knn = 10
+
+```
+
+I want a visual representation as to how well this did.
+
+```{r}
+test$knn1<-knn.1
+test$knn5<-knn.5
+test$knn11<-knn.11
+
+test$knn1correct<-as.factor(ifelse(test$knn1==test$admit, 1, 0))
+test$knn5correct<-as.factor(ifelse(test$knn5==test$admit, 1, 0))
+test$knn11correct<-as.factor(ifelse(test$knn11==test$admit, 1, 0))
+
+correct1<-test%>%
+  filter(knn1correct==1)
+correct5<-test%>%
+  filter(knn5correct==1)
+correct11<-test%>%
+  filter(knn11correct==1)
+
+
+g1<-ggplot(data=test)+geom_point(aes(x=GRE.Score, y=CGPA, color=as.factor(admit)), size=3.5)+
+  geom_point(data=correct1, aes(x=GRE.Score, y=CGPA), color='firebrick4', shape="circle cross", size=5)+
+  scale_color_manual(values = c("0" = "violet", "1" = "seagreen4"))+
+  ggtitle("K = 1")+theme_bw()+theme(legend.title = element_blank())
+
+
+g5<-ggplot(data=test)+geom_point(aes(x=GRE.Score, y=CGPA, color=as.factor(admit)), size=3.5)+
+  geom_point(data=correct5, aes(x=GRE.Score, y=CGPA), color='firebrick4', shape='circle cross', size=5)+
+  scale_color_manual(values = c("0" = "violet", "1" = "seagreen4"))+
+  ggtitle("K = 5")+theme_bw()+theme(legend.title = element_blank())
+
+
+g11<-ggplot(data=test)+geom_point(aes(x=GRE.Score, y=CGPA, color=as.factor(admit)), size=3.5)+
+  geom_point(data=correct11, aes(x=GRE.Score, y=CGPA), color='firebrick4', shape='circle cross', size=5)+
+  scale_color_manual(values = c("0" = "violet", "1" = "seagreen4"))+
+  ggtitle("K = 11")+theme_bw()+theme(legend.title = element_blank())
+
+
+grid.arrange(g1, g5, g11, nrow=3)
+
+```
+
+We actually have two different methods to determine optimal "K" at our disposal here! Let's try them.
+
+First we have cross validation.
+
+```{r}
+set.seed(123)
+knn.cross <- tune.knn(x = train.gc, y = as.factor(train.def), k = 1:40,tunecontrol=tune.control(sampling = "cross"), cross=10)
+summary(knn.cross)
+plot(knn.cross)
+```
+Now let's try the bootstrap method.
+
+```{r}
+set.seed(123)
+knn.boot <- tune.knn(x = train.gc, y = as.factor(train.def), k = 1:40,tunecontrol=tune.control(sampling = "boot"), cross=10)
+summary(knn.boot)
+plot(knn.boot)
+
+```
+
+Looking at both of the outputs, we are going with the magical number 13!
+
+```{r}
+set.seed(123)
+knn.13 <-  knn(train.gc, test.gc, train.def, k=13)
+
+g13<-ggplot(data=test)+geom_point(aes(x=GRE.Score, y=CGPA, color=as.factor(admit)), size=3.5)+
+  geom_point(data=correct11, aes(x=GRE.Score, y=CGPA), color='firebrick4', shape='circle cross', size=5)+
+  scale_color_manual(values = c("0" = "violet", "1" = "seagreen4"))+
+  ggtitle("K = 13")+theme_bw()+theme(legend.title = element_blank())
+
+confusionMatrix(knn.13, test.def)
+
+```
+
+I guess that 80% is the best we are going to get. Bummer. How about a different method? This one is my favorite classification method because it makes nice pictures. Classification trees! (Actually CART, but it is "Classification and Regression Trees").
+
+I start with a very, very small cp (complexity parameter). This usually overfits the tree.
+
+```{r}
+set.seed(123)
+train$admit <- factor(train$admit)
+CART <- rpart(admit~., data=train, cp=0.000001)
+summary(CART)
+
+# Make a plot of the classification tree rules
+prp(CART)
+```
+
+Now we see if we overfit or if the cp is okay.
+
+```{r}
+printcp(CART)
+plotcp(CART) # visualize cross-validation results
+summary(CART) # detailed summary of splits
+CART
+```
+Looks like we overfit just a smidgeon. Time to prune back to the best cp!
+
+```{r}
+bestcp<-CART$cptable[which(CART$cptable[,4]==min(CART$cptable[,4])), 1]
+CART<-prune(CART, cp=bestcp)
+prp(CART)
+
+predCART<-predict(CART, newdata=test, type="class")
+test$predCART<-predCART
+test$CARTcorrect<-ifelse(test$predCART==test$admit, 1, 0)
+
+correctCART<-test%>%
+  filter(CARTcorrect==1)
+
+gCART<-ggplot(data=test)+geom_point(aes(x=GRE.Score, y=CGPA, color=as.factor(admit)), size=3.5)+
+  geom_point(data=correctCART, aes(x=GRE.Score, y=CGPA), color='firebrick4', shape='circle cross', size=5)+
+  scale_color_manual(values = c("0" = "violet", "1" = "seagreen4"))+
+  ggtitle("CART!")+theme_bw()+theme(legend.title = element_blank())
+
+gCART
+
+confusionMatrix(predCART, test.def)
+```
+
+Compare the picture to the KNN picture.
+
+```{r}
+grid.arrange(g13, gCART, nrow=2)
+```
+
+Now, back to our default data set!
+
+We separate the variables as the response and explanatory variables so that we can use knn() function.
+
+```{r}
+
+# Assigning the response 
+train.def <- LectureTrain$default
+test.def <- LectureTest$default
+
+# Assign explanatory variables
+train.gc <- LectureTrain[,3:4]
+test.gc <- LectureTest[,3:4]
+
+```
+
+Let’s use k values (no of NNs) as 1, 5 and 20 to see how they perform in terms of correct proportion of classification and success rate.
+
+```{r}
+
+knn.1 <-  knn(train.gc, test.gc, train.def, k=1)
+knn.5 <-  knn(train.gc, test.gc, train.def, k=5)
+knn.20 <- knn(train.gc, test.gc, train.def, k=20)
+```
+
+Now we will calculate the proportion of correct classification for k = 1, 5 & 20.
+
+```{r}
+sum(test.def == knn.1)/length(test.def)  # For knn = 1
+sum(test.def == knn.5)/length(test.def)  # For knn = 5
+sum(test.def == knn.20)/length(test.def)  # For knn = 20
+```
+
+From the results it seems that the performance is better when K is bigger.
+
+Now we try to find the best K via cross validation.
+
+```{r}
+set.seed(123)
+knn.cross <- tune.knn(x = train.gc, y = train.def, k = 1:40,tunecontrol=tune.control(sampling = "cross"), cross=10)
+summary(knn.cross)
+plot(knn.cross)
+```
+
+It seems that K = 5 or 7 is the best with cross validation.
+
+Now we try to find the best K via bootstraping
+
+```{r}
+set.seed(123)
+knn.boot <- tune.knn(x = train.gc, y = train.def, k = 1:40,tunecontrol=tune.control(sampling = "boot"), cross=10)
+
+# load("KNN_in_class.RData")
+summary(knn.boot)
+plot(knn.boot)
+```
+
+7 is much worse! It seems that K = 13 is good with bootstrapping. For cross validation K = 14 is not too bad, but that is even so we will pick K = 13
+
+```{r}
+knn.best <-  knn(train.gc, test.gc, train.def, k=13)
+sum(test.def == knn.best)/length(test.def)  # For knn = 15
+# Confusion Matrix 
+cmKNN<-confusionMatrix(knn.best, LectureTest$default)
+cmKNN
+```
+## Step 4: Visualize
+
+```{r}
+# Summarize and plot the performance of the KNN
+
+# Add to our plotting dataframe
+LectureTestPlotting$knn.best <- knn.best
+
+## Plot the CART class
+plotClassKNN <- ggplot(data = LectureTestPlotting,
+                       mapping = aes(x = balance, y = income, color = knn.best, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Predicted class for KNN Model")
+grid.arrange(plotTest, plotClassKNN, nrow = 2)
+
+```
+
+# CART model
+
+## Step 5: Build a Classification Tree
+As discussed in the lecture, random forest models are an extended application of classification trees. Therefore, before fitting random forest models, let’s fit a classification tree to our data and see how we do (this will also allow us to see if extending to a random forest model improves our performance). The code block below fits a classification tree using the rpart package and then visualizes it using the prp() function from the rpart.plot package.
+
+```{r}
+CART <- rpart(default ~., data=LectureTrain, cp=0.000001)
+summary(CART)
+# Make a plot of the classification tree rules
+prp(CART)
+```
+
+Look at that. You now have a visual summary of how the CART model (in this case a classification model) is going to make a decision about whether or not someone is going to default. CART models offer maximum explainability. We have found that one of the great benefits to using random forest models is that it is relatively easy to explain to people how a random forest model works if you show them a CART output first (hence this portion of the practical exercise). We overfit the hell out of this. Lets see about pruning this down!
+
+```{r}
+printcp(CART)
+plotcp(CART) # visualize cross-validation results
+# summary(CART) # detailed summary of splits
+bestcp<-CART$cptable[which(CART$cptable[,4]==min(CART$cptable[,4])), 1]
+CART<-prune(CART, cp=bestcp)
+prp(CART)
+```
+
+Let’s see how this model performs on the test dataset:
+
+```{r}
+# Summarize and plot the performance of the classification tree
+
+# Get the probability classes for CART model applied to test dataset
+predClassCART <- predict(CART, newdata = LectureTest, type = "class")
+
+# Add to our plotting dataframe
+LectureTestPlotting$predClassCART <- predClassCART
+
+## Plot the CART class
+plotClassCART <- ggplot(data = LectureTestPlotting,
+                       mapping = aes(x = balance, y = income, color = predClassCART, shape = student)) +
+  layer(geom = "point", stat = "identity", position = "identity") +
+  scale_color_manual(values = c("No" = "blue", "Yes" = "red")) +
+  theme_bw() +
+  theme(legend.key = element_blank()) +
+  labs(title = "Predicted class for CART Model")
+grid.arrange(plotTest, plotClassCART, nrow = 2)
+
+# Report confusion matrix from on the test dataset
+cmCART<-confusionMatrix(predClassCART, LectureTest$default)
+cmCART
+```
+
+Finally, we get to compare everything we have done with classification methods!
+
+```{r, echo=FALSE}
+
+
+Logit1 <- glm(formula = default ~ .,
+               family  = binomial(link = "logit"),
+               data    = LectureTrain)
+
+# Conduct stepwise model selection
+LogitStep<-step(Logit1, direction = "both")
+predClassLogit <- factor(predict(LogitStep, type = "response", newdata=LectureTest) > 0.5, levels = c(FALSE,TRUE), labels = c("No","Yes"))
+
+cmLogit<-confusionMatrix(predClassLogit, LectureTest$default)
+
+##for LDA
+library(MASS)
+
+lda1<-lda(default ~ .,data=LectureTrain)
+
+ldaPredict<-predict(lda1, newdata = LectureTest, type="response")
+
+cmLDA<-confusionMatrix(ldaPredict$class, LectureTest$default) ##make sure to call "class!"
+set.seed(123)
+
+# Balance data using weights. Used because we have asymetric class sizes.
+wts <- 100/table(Default$default) 
+
+# Apply SVM model using linear kernel having default target and the other three as predictors
+SVM1 <- svm(default ~ .,data=LectureTrain, kernel="linear",
+             cost=1,gamma=1, class.weight=wts,
+             probability=TRUE, decision.values=TRUE)
+# Get the probabilities predicted by SVM
+predProbSVMraw <-predict(SVM1, LectureTest, probability = TRUE)
+
+# Get the probabilitiy of "Yes" from the attributes
+predProbSVM1 <- attributes(predProbSVMraw)$probabilities[,2]
+
+# Get the probability classes
+predClassSVM1 <- predict(SVM1, newdata = LectureTest)
+
+cmSVMnoTune<-confusionMatrix(predClassSVM1, LectureTest$default)
+
+load("SVMLecture.rdata")  # loads model data file saved by instructor
+# Now extra}ct the best model
+SVMBest<-SVM.Tuned$best.model
+
+# Calculate tuned model performance on the test dataset
+predClassSVMBest=predict(SVMBest, LectureTest)
+
+# Report confusion matrix from on the test dataset
+cmSVMTuned<-confusionMatrix(predClassSVMBest, LectureTest$default)
+```
+
+```{r}
+cmLDA$overall
+cmLogit$overall
+cmSVMnoTune$overall
+cmSVMTuned$overall
+cmKNN$overall
+cmCART$overall
+```
+
+Save your stuff!

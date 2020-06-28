@@ -1,0 +1,221 @@
+---
+title: "Week 3 In Class Lab"
+author: LTC Jarrod Shingleton
+output: pdf_document
+header-includes:
+  - \usepackage[utf8]{inputenc}
+  - \usepackage{mathtools}
+---
+
+
+# Week 3 Practice in Lab
+
+## Step 1: Set the working directory for reading in files.
+
+setwd('/insert full path to your folder')
+
+Remember, if you can’t get the setwd (set working directory) function to work, try ?setwd to get some additional help. You can also use RStudio to set the working directory.
+
+## Step 2: Apply Best Subset Selection.
+
+In the lecture today, I have shown you some examples using “Hitter” dataset from “ISLR” library. In the class lab exercise you will go through what I did in the class today. Here we apply the best subset selection approach to the “Hitters” dataset. This means that we would like to predict a baseball player’s “Salary” on the basis of various statistics associated with performance in the previous year.
+
+### Step2.1: Uploading the “Hitter” dataset
+
+“Hitter” dataset is in “ISLR” library. So simply call “ISLR” library and call “Hitter”.
+
+```{r}
+# install.packages(c("ISLR"), dependencies = TRUE)
+library(ISLR)
+data(Hitters)
+```
+
+### Step2.2: Cleaning the dataset.
+“Hitter” dataset is messy. Even though “Salary” is a response variable, the “Salary”" variable is missing for some of the players. In reality, this happens a lot, unfortunately. So first we have to clean the dataset by removing the data point with missing the “Salary”   variable.
+
+Let's see how many variables the dataset has.
+
+```{r}
+names(Hitters)
+```
+
+We want to “Salary” as a response variable. In order to see them, you can type:
+
+```{r}
+head(Hitters$Salary)
+```
+The first element is “NA” so it is missing. is.na() function is a boolean function to tell you if the number is “NA” or not. If it is then it returns 1 (True). If not then it returns 0 (False).
+
+```{r}
+head(is.na(Hitters$Salary))
+```
+
+To count how many “NA” are in the “Hitters\$Salary” data, we will use sum() functions. Not to go into details about R and factors, but a "TRUE" with the is.na() function returns a 1 adn a "FALSE" returns a zero. So if we sum them up then it should return the total number of missing values in “Hitters\$Salary”.
+
+```{r}
+sum(is.na(Hitters$Salary))
+```
+
+Hence we see that Salary is missing for 59 players. The na.omit() function removes all of the rows that have missing values in any variable. \textcolor{red}{NOTE: be careful with this, as it will remove \textbf{ALL} rows with "NA." Don't do this if you want to keep some rows with "NA"s.}
+
+```{r}
+Hitters <- na.omit(Hitters)
+sum(is.na(Hitters$Salary))
+```
+
+### Step 2.3: Best Subset Selection
+The regsubsets() function (part of the leaps library) performs best set selection by identifying the best model that contains a given number of predictors, where best is quantified using \textbf{RSS}. The syntax is the same as for lm(). The summary() command outputs the best set of variables for each model size.
+
+In order to conduct best subset selection we will use “leaps” package. So please install “leaps” package.
+
+```{r}
+library(leaps)
+regfit.full <- regsubsets(Salary ~., Hitters)
+summary(regfit.full)
+```
+
+An asterisk indicates that a given variable is included in the corresponding model. For instance, this output indicates that the best two variable model contains only “Hits” and “CRBI." By default, regsubsets() only reports results up to the best eight variable model. But the “nvmax” option can be used in order to return as many variables as are desired. Here we fit up to a 19 variable model. For example:
+
+```{r}
+regfit.full <- regsubsets(Salary ~., Hitters, nvmax =19)
+summary(regfit.full)
+```
+
+## Step 3: Ridge Regression
+
+We will use the “glmnet” package in order to perform ridge and lasso regression. Fortunately, one of the packages we will need (glmnet) is already installed in the AWS instance! If you are using your own Rstudio, you will need to install "glmnet." You can do this by typing install.packages("glmnet"). The main function in this package is glmnet(), which can be used to fit ridge regression models, lasso models, etc.. The aurguments of this function are not standard form. In particular, we must pass in an x matrix as well as a y vector, and we do not use the “y ~ x” syntax. We will now perform ridge and lasso regression in order to predict Salary on the Hitters data. Before proceeding ensure that the missing values have been removed from the data, as described above.
+
+### Step 3.1: Setting up the data flame for the glmnet() function
+The model.matrix() function is particularly useful for creating x; not only does it produce a matrix corresponding to the 19 predictors but it also automatically transforms any qualitative variables into dummy variables.
+
+“model.matrix (Salary~., Hitters)” returns a matrix and “[,-20]” means removing the last column of the matrix “model.matrix (Salary~., Hitters)”. We are removing the last column because glmnet() function does not take nonnumerical data.
+
+```{r}
+x <- model.matrix(Salary~.,Hitters)[,-20]
+# x <- model.matrix(Salary~.,Hitters)
+y <- Hitters$Salary
+```
+
+### 3.2: Setting a training and testing sets
+
+We now split the samples into a training set and a test set in order to estimate the test error of ridge and lasso regression. There are two common ways to randomly split a data set. The first is to produce a random vector of TRUE, FALSE elements and select the observations corresponding to TRUE for the training data. The second is to randomly choose a subset of numbers between 1 and n; these can then be used as the indices for the training observations.
+
+“sample()” function is sample uniformly from a set.
+
+```{r}
+set.seed(1)
+train <- sample(1:nrow(x), round(nrow(x))/2)
+
+##NOTE: This only returns row numbers!!
+
+```
+
+Here “sample(1:nrow(x), nrow(x)/2)” means we sample nrow(x)/2 many numbers from a set of integers from 1 to nrow(x). Here “nrow()” is a function which returns the number of rows of x (remember, x is a matrix whose columns are indexed by data IDs and rows are indexed by explanatory variables).
+
+```{r}
+test <- (-train)
+
+### We are setting training sets for the explanatory variables x and response variable y
+x.train <- x[train,]
+y.train <- y[train]
+### We are setting test sets for the explanatory variables x and response variable y
+x.test <- x[test,]
+y.test <- y[test]
+
+```
+
+“test” returns the complement of the set “train”. Therefore, we want to pick a subset of the dataset for a training set and remaning as a test set, i.e., we pick a subset of the rows of the matrix x and subset of the vector y which have the same indexes as the subset of the rows of x we picked for a training set. Then the remaining in the dataset becomes a test set. “x.train” is a training set for the explanatory variable, “x.test” is a test set for the explanatory variable, “y.train” is a training set for the response variable, and “y.test” is a test set in terms of the response variable.
+
+### Step 3.3: Setting up the $\lambda$
+The “glmnet()” function has an alpha argument that determines what type of model is fit. If alpha=0 then a ridge regression model is fit, and if alpha=1 then a lasso model is fit. We first fit a ridge regression model.
+
+```{r}
+library(glmnet)
+grid <- 10^seq(10,-2,length=100)
+```
+
+By default the “glmnet()” function performs ridge regression for an automatically selected range of lambda values. However, here we have chosen to implement the function over a grid of values ranging from $\lambda=10^{(10)}$ to $\lambda = 10^{(-2)}$, essentially covering the full range of scenarios from the null model containing only the intercept, to the least squares fit. As we will see, we can also compute model fits for a particular value of $\lambda$ that is not one of the original grid values. Note that by default, the glmnet() function standardizes the variables so that they are on the same scale. To turn off this default setting, use the argument standardize=FALSE.
+
+Now we are applying Ridge regression on a training set:
+
+```{r}
+ridge.mod <- glmnet(x.train, y.train, alpha = 0, lambda = grid, thresh = 1e-12)
+```
+
+Again if you want to apply Ridge regression you have to set alpha = 0. The output from glmnet() function, “ridge.mod”, is the the results of Ridge regression with all values of lambda in grid. This will be used to predict the coefficients via Ridge regression for any value of $\lambda$ using predict() function.
+
+### Step 3.4: Finding the best lambda via cross-validation
+Since lambda is a user speciific value, we have to choose the best lambda.
+We can do this using the built in cross validation function, “cv.glmnet()”. By default, the function performs ten fold cross validation, though this can be changed using the argument folds. Note that we set a random seed first so our results will be reproducible, since the choice of the cross validation folds is random.
+
+```{r}
+set.seed (1)
+cv.out <- cv.glmnet(x.train, y.train, alpha = 0)
+plot(cv.out)
+```
+
+
+The best lambda is:
+
+```{r}
+bestlam <- cv.out$lambda.min
+bestlam
+```
+
+### Step 3.5: Estimating the coefficients
+Therefore, we see that the value of lambda that results in the smallest crossvalidation error is about 326. What is the test MSE associated with this value of lambda? Now, we will use predict() function to estimate the coefficients with lambda = bestlam and a test set for the explanatory variables.
+
+```{r}
+ridge.pred <- predict(ridge.mod, s=bestlam, newx=x.test)
+mean((ridge.pred - y.test)^2)
+```
+
+Finally, we refit our ridge regression model on the full data set, using the value of lambda chosen by cross validation, and examine the coefficient estimates using predict() function with type=“coefficients”.
+
+```{r}
+out <- glmnet(x,y,alpha=0)
+predict(out, type="coefficients", s=bestlam)
+```
+
+### Step 3.6: Using the explanatory variables selected by Best Subset Selection
+Recall that at Step 2.3 we found out that the best two variable model contains only “Hits” and “CRBI”. “Hits” are in the second column in “Hitters” and “CRBI” are in the 12th column of “Hitters”. “c()” function represents a vector. For example if you type “c(3, 13)” then it will be the vector of 3 and 13. The first column of “model.matrix()” represents the intercept and so you need the third and 13th columns of the output from “model.matrix()” function.
+
+```{r}
+x <- model.matrix(Salary~.,Hitters)[,c(3,13)]
+y <- Hitters$Salary
+```
+
+Then repeat Step 3.2 to Step 3.5 to estimate the coefficients for “Hits” and “CRBI”.
+
+```{r}
+train <- sample(1:nrow(x), round(nrow(x))/2)
+test <- (-train)
+### We are setting training sets for the explanatory variables x and response variable y
+x.train <- x[train,]
+y.train <- y[train]
+### We are setting test sets for the explanatory variables x and response variable y
+x.test <- x[test,]
+y.test <- y[test]
+ridge.mod <- glmnet(x.train, y.train, alpha = 0, lambda = grid, thresh = 1e-12)
+cv.out <- cv.glmnet(x.train, y.train, alpha = 0)
+bestlam <- cv.out$lambda.min
+bestlam
+
+ridge.pred <- predict(ridge.mod, s=bestlam, newx=x.test)
+## This is MSE with the test set
+mean((ridge.pred - y.test)^2)
+out <- glmnet(x,y,alpha=0)
+predict(out, type="coefficients", s=bestlam)[1:3,]
+
+```
+
+## Step 4: Lasso
+Basically all you have to do is to replace with alpha = 1 in glmnet() function in Step 3.1 through Step 3.5. Note that as we discussed in the lecture, lasso will not conduct variable selection like ridge regression. So you do not really need to select variables separately.
+
+Compare the MSE for ridge regression with selected variables via best subset selection and lasso. What do you think? How are they difference?
+
+## Step 5: Lasso vs Ridge regression
+To compare the performance on lasso and ridge regression you can compute the test MSE associated with this value of lambda for lasso and ridge. Which one is smaller? How about with linear regression? For estimating the coefficients via linear regression, you should use lm() function instead of glmnet().
+
+Before moving on, perform the following three actions to save your work and prepare for the practical application:
+Save your workspace as “LectureExampleData1.RData” (By typing save.image(“LectureExampleData1.RData”) function)
