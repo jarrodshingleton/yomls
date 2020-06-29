@@ -1,3 +1,23 @@
+---
+authors:
+- jarrod
+categories: []
+date: "2020-02-05T00:00:00Z"
+draft: false
+featured: false
+image:
+  caption: ""
+  focal_point: ""
+lastMod: "2020-09-05T00:00:00Z"
+projects: []
+subtitle: Picking between two choices - Which one is it?
+summary: Picking between two choices - Which one is it?
+tags: [R, models, ml, machine learning]
+title: An Intro to Logistic Regression
+---
+
+
+
 (Logistic Regressions) Overview
 
 In this practical exercise, you'll first run through a logistic

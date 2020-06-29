@@ -1,3 +1,22 @@
+---
+authors:
+- jarrod
+categories: []
+date: "2020-02-05T00:00:00Z"
+draft: false
+featured: false
+image:
+  caption: ""
+  focal_point: ""
+lastMod: "2020-09-05T00:00:00Z"
+projects: []
+subtitle: A Quick Introduction to Linear Regression
+summary: A Quick Introduction to Linear Regression
+tags: [R, models, ml, machine learning]
+title: Linear Regression
+---
+
+
 Week 2 Practice in Lab
 ======================
 
