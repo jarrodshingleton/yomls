@@ -4,13 +4,13 @@
 #   The weight parameter defines the order that the links will appear in.
 
 [[main]]
-  name = "Home"
+  name = "Ye Olde Home"
   url = "#about"
   weight = 10
 
 [[main]]
-  name = "Posts"
-  url = "#posts"
+  name = "Talking over a Pint (Our Humble Blog)"
+  url = "post/"
   weight = 20
 
 [[main]]
@@ -19,7 +19,7 @@
   weight = 30
 
 [[main]]
-  name = "Publications"
+  name = "The Meat (ML Articles and Sundries)"
   url = "#featured"
   weight = 40
 
