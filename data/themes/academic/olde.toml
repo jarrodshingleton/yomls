@@ -1,8 +1,8 @@
 # Theme metadata
-name = "Olde"
+name = "olde"
 
 # Is theme light or dark?
-light = true
+light = false
 
 # Primary
 primary = "#2962ff"
@@ -10,7 +10,7 @@ primary = "#2962ff"
 # Menu
 menu_primary = "#FAEBD7"
 menu_text = "#696969"
-menu_text_active = "#708090"
+menu_text_active = "#000000"
 menu_title = "#696969"
 
 # Home sections
