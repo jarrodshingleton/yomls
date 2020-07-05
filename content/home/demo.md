@@ -58,10 +58,10 @@ Welcome to our little olde shoppe of **Machine Learning Algorithms**. This site 
 
 **We add more as we go...**
 
-**[Join](https://sourcethemes.com/academic/docs/install/) the Most Empowered Hugo Community**
+# **[Join](https://sourcethemes.com/academic/docs/install/) the Most Empowered Hugo Community**
 
-{{% alert note %}}
-This an alert text box on the page [elements](https://sourcethemes.com/academic/docs/writing-markdown-latex/) to the [*Blank* widget](https://sourcethemes.com/academic/docs/widgets/).
-
-Backgrounds can be applied to any section. Here, the *background* option is set give an *image parallax* effect.
-{{% /alert %}}
+# {{% alert note %}}
+# This an alert text box on the page [elements](https://sourcethemes.com/academic/docs/writing-markdown-latex/) to the [*Blank* widget](https://sourcethemes.com/academic/docs/widgets/).
+# 
+# Backgrounds can be applied to any section. Here, the *background* option is set give an *image parallax* effect.
+# {{% /alert %}}

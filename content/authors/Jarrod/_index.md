@@ -4,17 +4,17 @@ title: Jarrod Shingleton
 
 # Username (this should match the folder name)
 authors:
-- admin
+- Jarrod
 
 # Is this the primary user of the site?
 superuser: true
 
 # Role/position
-role: Super Brilliant ML dudez
+role: Co-author of YOMLS
 
 # Organizations/Affiliations
 organizations:
-- name: Yo Momma
+- name: US Army Operations Research Systems Analyst
   url: ""
 
 # Short bio (displayed in user profile at end of posts)
@@ -23,7 +23,9 @@ bio: Our research interest include duing awesome stuff in the ML world.
 interests:
 - R
 - Python
-- SASS
+- Machine Learning Techniques
+- Classical Guitar
+- Board Games
 
 education:
   courses:
@@ -36,21 +38,21 @@ education:
 social:
 - icon: envelope
   icon_pack: fas
-  link: '#contact'  # For a direct email link, use "mailto:test@example.org".
-- icon: twitter
-  icon_pack: fab
-  link: https://twitter.com/GeorgeCushen
-- icon: google-scholar
-  icon_pack: ai
-  link: https://scholar.google.co.uk/citations?user=sIwtMXoAAAAJ
-- icon: github
-  icon_pack: fab
-  link: https://github.com/gcushen
+  link: 'jarrod.shingleton@gmail.com'  # For a direct email link, use "mailto:test@example.org".
+# - icon: twitter
+#   icon_pack: fab
+#   link: https://twitter.com/GeorgeCushen
+# - icon: google-scholar
+#   icon_pack: ai
+#   link: https://scholar.google.co.uk/citations?user=sIwtMXoAAAAJ
+# - icon: github
+#   icon_pack: fab
+#   link: https://github.com/gcushen
 # Link to a PDF of your resume/CV from the About widget.
 # To enable, copy your resume/CV to `static/files/cv.pdf` and uncomment the lines below.
-# - icon: cv
-#   icon_pack: ai
-#   link: files/cv.pdf
+- icon: cv
+  icon_pack: ai
+  link: files/cv.pdf
 
 # Enter email to display Gravatar (if Gravatar enabled in Config)
 email: ""

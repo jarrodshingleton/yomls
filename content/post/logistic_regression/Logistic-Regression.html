@@ -8,39 +8,33 @@ output: md_document
 
 
 <p>(Logistic Regressions) Overview</p>
-<p>In this practical exercise, you’ll first run through a logistic regression exercise on a small, well-known dataset so that you can see how to use the code to develop a logistic regression model. Let’s get started.</p>
+<p>In this practical exercise, you'll first run through a logistic regression exercise on a small, well-known dataset so that you can see how to use the code to develop a logistic regression model. Let's get started.</p>
 <div id="step-1-set-up-r-environment-for-lecture-example-analysis" class="section level1">
 <h1>Step 1: Set up R environment for Lecture Example Analysis</h1>
 <p>First, as usual, set the working directory.</p>
 <p>setwd()</p>
-<p>Remember, if you can’t get the setwd (set working directory) function to work, try ?setwd to get some additional help.</p>
-<p>Since we’ll be conducting two different analyses for this practical exercise (including the take home lab), you’ll need to create a new script file for the class examples. For this week, we will work on classifications, so let’s make a new R file called “LectureExampleData2” for In-Class lab and “LabExampleData2” for the Take-Home Lab.</p>
+<p>Remember, if you can't get the setwd (set working directory) function to work, try ?setwd to get some additional help.</p>
+<p>Since we'll be conducting two different analyses for this practical exercise (including the take home lab), you'll need to create a new script file for the class examples. For this week, we will work on classifications, so let's make a new R file called &quot;LectureExampleData2&quot; for In-Class lab and &quot;LabExampleData2&quot; for the Take-Home Lab.</p>
 <p>This week, we will use the R packages <em>ggplot2</em>, <em>gridExtra</em>, and <em>caret.</em> You need to install them by using the <em>install.packages()</em> function.</p>
-<p>To begin, we will clear our current workspace (get rid of any saved variables) and load a few packages that we’ll use for the example analysis. Cut and paste the following commands into your new script file and run them:</p>
+<p>To begin, we will clear our current workspace (get rid of any saved variables) and load a few packages that we'll use for the example analysis. Cut and paste the following commands into your new script file and run them:</p>
 <pre class="r"><code>rm(list=ls())  ##clears the environment
 
 ## Library for An Introduction to Statistical Learning with Applications in R
-library(ISLR)</code></pre>
-<pre><code>## Warning: package &#39;ISLR&#39; was built under R version 3.5.3</code></pre>
-<pre class="r"><code>## Libraries for Plotting our Results
-library(ggplot2)</code></pre>
-<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 3.5.1</code></pre>
-<pre><code>## Warning: As of rlang 0.4.0, dplyr must be at least version 0.8.0.
-## * dplyr 0.7.6 is too old for rlang 0.4.5.
-## * Please update dplyr to the latest version.
-## * Updating packages on Windows requires precautions:
-##   &lt;https://github.com/jennybc/what-they-forgot/issues/62&gt;</code></pre>
-<pre class="r"><code>library(gridExtra)</code></pre>
-<pre><code>## Warning: package &#39;gridExtra&#39; was built under R version 3.5.1</code></pre>
-<pre class="r"><code>## Library for confusion matrix
+library(ISLR)
+
+## Libraries for Plotting our Results
+library(ggplot2)
+library(gridExtra)
+
+## Library for confusion matrix
 library(caret)</code></pre>
 <pre><code>## Loading required package: lattice</code></pre>
-<p>Note that if you look in the “Environment” window in your upper right hand column, all of the objects you created with your previous code have been erased from memory. You are restarting with a blank slate.</p>
+<p>Note that if you look in the &quot;Environment&quot; window in your upper right hand column, all of the objects you created with your previous code have been erased from memory. You are restarting with a blank slate.</p>
 </div>
-<div id="step-2-load-visualize-and-split-training-vs.test-data-sets" class="section level1">
-<h1>Step 2: Load, Visualize, and Split (Training vs. Test) Data Sets</h1>
-<p>Now, let’s bring in the dataset that we’ll be working with for the example. this is a simulated datasheet titled “Default” containing information on ten-thousand credit customers provided in <em>ISLR</em>. We will use the “Default” dataset to illustrate the concept of classification by fitting several different machine learning models to the data over the course of several practical application exercises. For these examples, we will develop models to “predict whether an individual will default on his or her credit card payment, on the basis of annual income and monthly credit card balance.” (James et al, 2013, p. 128).</p>
-<p>“Default” dataset is in the “ISLR” library.</p>
+<div id="step-2-load-visualize-and-split-training-vs.-test-data-sets" class="section level1">
+<h1>Step 2: Load, Visualize, and Split (Training vs. Test) Data Sets</h1>
+<p>Now, let's bring in the dataset that we'll be working with for the example. this is a simulated datasheet titled &quot;Default&quot; containing information on ten-thousand credit customers provided in <em>ISLR</em>. We will use the &quot;Default&quot; dataset to illustrate the concept of classification by fitting several different machine learning models to the data over the course of several practical application exercises. For these examples, we will develop models to &quot;predict whether an individual will default on his or her credit card payment, on the basis of annual income and monthly credit card balance.&quot; (James et al, 2013, p. 128).</p>
+<p>&quot;Default&quot; dataset is in the &quot;ISLR&quot; library.</p>
 <pre class="r"><code>##Load Default (Credit Card Default Data)
 data(Default)
 
@@ -62,8 +56,8 @@ summary(Default)</code></pre>
 ##                        Mean   : 835.4   Mean   :33517  
 ##                        3rd Qu.:1166.3   3rd Qu.:43808  
 ##                        Max.   :2654.3   Max.   :73554</code></pre>
-<p>Looking at the data, you will see that the response variable stored in the column “default” which indicates whether or not a person defaulted on their payment. There is a categorical variable titled “student” indicating student status and two numeric variables, “balance” and “income.”</p>
-<p>Let’s plot the data based on the two numeric attributes to get a sense of what the data looks like using the <em>ggplot2</em> package. take careful note of how we use various aesthetics to change the formatting of the plot (color, shape, etc.):</p>
+<p>Looking at the data, you will see that the response variable stored in the column &quot;default&quot; which indicates whether or not a person defaulted on their payment. There is a categorical variable titled &quot;student&quot; indicating student status and two numeric variables, &quot;balance&quot; and &quot;income.&quot;</p>
+<p>Let's plot the data based on the two numeric attributes to get a sense of what the data looks like using the <em>ggplot2</em> package. take careful note of how we use various aesthetics to change the formatting of the plot (color, shape, etc.):</p>
 <pre class="r"><code>## Plot the actual data
 plotData &lt;- ggplot(data = Default,
        mapping = aes(x = balance, y = income, color = default, shape = student)) +
@@ -73,9 +67,9 @@ plotData &lt;- ggplot(data = Default,
     theme(legend.key = element_blank()) +
     labs(title = &quot;Original data&quot;)
 plotData</code></pre>
-<p><img src="/post/Logistic-Regression_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
-<p>We have seen <em>ggplot2</em> before so this should be at least a little familiar. If you want to know more on <em>ggplot2</em>, type “?ggplot2.”</p>
-<p>We can see in the plot above that there is no “clean break” or simple rule that divides those that default from those that don’t. We will try several different modeling approaches to find a best policy over the next few practical application exercises.</p>
+<p><img src="/post/logistic_regression/Logistic-Regression_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>We have seen <em>ggplot2</em> before so this should be at least a little familiar. If you want to know more on <em>ggplot2</em>, type &quot;?ggplot2.&quot;</p>
+<p>We can see in the plot above that there is no &quot;clean break&quot; or simple rule that divides those that default from those that don't. We will try several different modeling approaches to find a best policy over the next few practical application exercises.</p>
 <p>Before we begin fitting models, we need to break the data into a train and a test Dataset. We will split the Default dataset into a training dataset that includes 9-% of the observations and a test dataset that includes 20% of our observations. We do this by generating a sample of index values and then pulling data out of the Default dataframe based on the sample.</p>
 <pre class="r"><code># Partition of data set into 80% Train and 20% Test datasets
 set.seed(123)  # ensures we all get the sample sample of data for train/test
@@ -87,9 +81,9 @@ LectureTest &lt;- Default[-sampler,]</code></pre>
 </div>
 <div id="setp-3-fit-a-logistic-regression-model" class="section level1">
 <h1>Setp 3: Fit a Logistic Regression Model</h1>
-<p>The code blocks below fit two different logistic regression models. The first one uses R’s shorthand notation of a period for fitting a model using all features (response variable ~.). The second model uses only the two numeric predictors, and uses the <em>scale()</em> command to center the scale on the numeric data. The summary command provides a summary of the model fit (as discussed in the lecture).</p>
-<p>Notice that we are using the <em>glm</em> function and not the <em>lm</em> function, but to use this, we need to tell the function what type of model we want to fit. If you set “family” to “gaussian,” you would get normal linear regression.</p>
-<p>To use the glm() function for logistic regress, you have to set the parameter “family = binomial(link=”logit“).”</p>
+<p>The code blocks below fit two different logistic regression models. The first one uses R's shorthand notation of a period for fitting a model using all features (response variable ~.). The second model uses only the two numeric predictors, and uses the <em>scale()</em> command to center the scale on the numeric data. The summary command provides a summary of the model fit (as discussed in the lecture).</p>
+<p>Notice that we are using the <em>glm</em> function and not the <em>lm</em> function, but to use this, we need to tell the function what type of model we want to fit. If you set &quot;family&quot; to &quot;gaussian,&quot; you would get normal linear regression.</p>
+<p>To use the glm() function for logistic regress, you have to set the parameter &quot;family = binomial(link=&quot;logit&quot;).&quot;</p>
 <pre class="r"><code>Logit1 &lt;- glm(formula = default ~ .,
                family  = binomial(link = &quot;logit&quot;),
                data    = LectureTrain)
@@ -101,22 +95,22 @@ summary(Logit1)</code></pre>
 ## 
 ## Deviance Residuals: 
 ##     Min       1Q   Median       3Q      Max  
-## -2.5837  -0.1364  -0.0507  -0.0179   3.7806  
+## -2.1526  -0.1404  -0.0558  -0.0199   3.7422  
 ## 
 ## Coefficients:
 ##               Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept) -1.156e+01  5.687e-01 -20.320   &lt;2e-16 ***
-## studentYes  -4.394e-01  2.672e-01  -1.645    0.100    
-## balance      5.983e-03  2.692e-04  22.225   &lt;2e-16 ***
-## income       1.098e-05  9.185e-06   1.195    0.232    
+## (Intercept) -1.097e+01  5.487e-01 -19.995   &lt;2e-16 ***
+## studentYes  -6.344e-01  2.621e-01  -2.421   0.0155 *  
+## balance      5.772e-03  2.605e-04  22.162   &lt;2e-16 ***
+## income       4.449e-06  9.095e-06   0.489   0.6248    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## (Dispersion parameter for binomial family taken to be 1)
 ## 
-##     Null deviance: 2394.2  on 7999  degrees of freedom
-## Residual deviance: 1239.5  on 7996  degrees of freedom
-## AIC: 1247.5
+##     Null deviance: 2340.6  on 7999  degrees of freedom
+## Residual deviance: 1252.3  on 7996  degrees of freedom
+## AIC: 1260.3
 ## 
 ## Number of Fisher Scoring iterations: 8</code></pre>
 <pre class="r"><code>## Fit logistic regression using only scaled numerical predictors
@@ -131,47 +125,47 @@ summary(Logit2)</code></pre>
 ## 
 ## Deviance Residuals: 
 ##     Min       1Q   Median       3Q      Max  
-## -2.5842  -0.1374  -0.0519  -0.0182   3.7796  
+## -2.2179  -0.1417  -0.0573  -0.0207   3.7308  
 ## 
 ## Coefficients:
 ##                Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept)    -6.29438    0.21907 -28.733  &lt; 2e-16 ***
-## scale(balance)  2.86579    0.12814  22.365  &lt; 2e-16 ***
-## scale(income)   0.30627    0.07449   4.111 3.93e-05 ***
+## (Intercept)    -6.13876    0.20999  -29.23  &lt; 2e-16 ***
+## scale(balance)  2.74467    0.12318   22.28  &lt; 2e-16 ***
+## scale(income)   0.28919    0.07453    3.88 0.000104 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## (Dispersion parameter for binomial family taken to be 1)
 ## 
-##     Null deviance: 2394.2  on 7999  degrees of freedom
-## Residual deviance: 1242.2  on 7997  degrees of freedom
-## AIC: 1248.2
+##     Null deviance: 2340.6  on 7999  degrees of freedom
+## Residual deviance: 1258.1  on 7997  degrees of freedom
+## AIC: 1264.1
 ## 
 ## Number of Fisher Scoring iterations: 8</code></pre>
-<p>We can see that the first model using all of the predictors provides a better fit (as we would expect). However, better fit on the training data often does not necessarily lead to a better model fit on out of sample test data. Selecting the subset of features that provides the best model is a large (unsolved) problem in data science, but there are some algorithmic procedures for doing so that provide some benefit. We’ll use one automated procedure called stepwise modeling below.</p>
+<p>We can see that the first model using all of the predictors provides a better fit (as we would expect). However, better fit on the training data often does not necessarily lead to a better model fit on out of sample test data. Selecting the subset of features that provides the best model is a large (unsolved) problem in data science, but there are some algorithmic procedures for doing so that provide some benefit. We'll use one automated procedure called stepwise modeling below.</p>
 </div>
 <div id="step-4-stepwise-model-selection-feature-subsetting" class="section level1">
 <h1>Step 4: Stepwise Model Selection (Feature Subsetting)</h1>
-<p>Please see the section starting at page 205 in <em>ISLR</em> (James et al, 2013) for an in-depth discussion of model selection. For this practical exercise, we’ll apply the automated Stepwise model selection approach to the model that has all of our predictors using the code below.</p>
+<p>Please see the section starting at page 205 in <em>ISLR</em> (James et al, 2013) for an in-depth discussion of model selection. For this practical exercise, we'll apply the automated Stepwise model selection approach to the model that has all of our predictors using the code below.</p>
 <pre class="r"><code># Conduct stepwise model selection
 LogitStep&lt;-step(Logit1, direction = &quot;both&quot;)</code></pre>
-<pre><code>## Start:  AIC=1247.51
+<pre><code>## Start:  AIC=1260.3
 ## default ~ student + balance + income
 ## 
 ##           Df Deviance    AIC
-## - income   1   1240.9 1246.9
-## &lt;none&gt;         1239.5 1247.5
-## - student  1   1242.2 1248.2
-## - balance  1   2378.6 2384.6
+## - income   1   1252.5 1258.5
+## &lt;none&gt;         1252.3 1260.3
+## - student  1   1258.1 1264.1
+## - balance  1   2328.8 2334.8
 ## 
-## Step:  AIC=1246.94
+## Step:  AIC=1258.53
 ## default ~ student + balance
 ## 
 ##           Df Deviance    AIC
-## &lt;none&gt;         1240.9 1246.9
-## + income   1   1239.5 1247.5
-## - student  1   1259.2 1263.2
-## - balance  1   2382.8 2386.8</code></pre>
+## &lt;none&gt;         1252.5 1258.5
+## + income   1   1252.3 1260.3
+## - student  1   1273.2 1277.2
+## - balance  1   2330.3 2334.3</code></pre>
 <pre class="r"><code># Summarize the selected model
 summary(LogitStep)</code></pre>
 <pre><code>## 
@@ -181,28 +175,28 @@ summary(LogitStep)</code></pre>
 ## 
 ## Deviance Residuals: 
 ##     Min       1Q   Median       3Q      Max  
-## -2.5455  -0.1354  -0.0506  -0.0178   3.7988  
+## -2.1723  -0.1406  -0.0559  -0.0199   3.7500  
 ## 
 ## Coefficients:
 ##               Estimate Std. Error z value Pr(&gt;|z|)    
-## (Intercept) -1.112e+01  4.301e-01  -25.86  &lt; 2e-16 ***
-## studentYes  -6.885e-01  1.651e-01   -4.17 3.05e-05 ***
-## balance      5.990e-03  2.691e-04   22.26  &lt; 2e-16 ***
+## (Intercept) -1.080e+01  4.141e-01 -26.077  &lt; 2e-16 ***
+## studentYes  -7.333e-01  1.658e-01  -4.424 9.69e-06 ***
+## balance      5.775e-03  2.604e-04  22.178  &lt; 2e-16 ***
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
 ## (Dispersion parameter for binomial family taken to be 1)
 ## 
-##     Null deviance: 2394.2  on 7999  degrees of freedom
-## Residual deviance: 1240.9  on 7997  degrees of freedom
-## AIC: 1246.9
+##     Null deviance: 2340.6  on 7999  degrees of freedom
+## Residual deviance: 1252.5  on 7997  degrees of freedom
+## AIC: 1258.5
 ## 
 ## Number of Fisher Scoring iterations: 8</code></pre>
-<p>Once the code runs, you can see that the model selected using The stepwise procedure uses only two of the predictors variables: student (a categorical Yes/No variable) and balance (a numeric variable). Now, let’s take a quick look at model performance.</p>
+<p>Once the code runs, you can see that the model selected using The stepwise procedure uses only two of the predictors variables: student (a categorical Yes/No variable) and balance (a numeric variable). Now, let's take a quick look at model performance.</p>
 </div>
 <div id="step-5-visualization-and-performance-of-model" class="section level1">
 <h1>Step 5: Visualization and Performance of Model</h1>
-<p>Now that we’ve picked a model, let’s add the predictions made to our dataset. We evaluate performance on the “held out” test dataset (i.e. data that wasn’t used to fit the model). The code block below creates a version of the Test dataset for plotting purposes and adds the resulting predictions to the dataframe. The column “predProbLogit” adds the probability calculated by the final logit model for each observation in the test dataset. The column “predClassLogit” adds the resulting prediction on the test dataset when the value 0.5 is used as the classification threshold. We again use the <em>summary()</em> command to get a quick look at the resulting data.</p>
+<p>Now that we've picked a model, let's add the predictions made to our dataset. We evaluate performance on the &quot;held out&quot; test dataset (i.e. data that wasn't used to fit the model). The code block below creates a version of the Test dataset for plotting purposes and adds the resulting predictions to the dataframe. The column &quot;predProbLogit&quot; adds the probability calculated by the final logit model for each observation in the test dataset. The column &quot;predClassLogit&quot; adds the resulting prediction on the test dataset when the value 0.5 is used as the classification threshold. We again use the <em>summary()</em> command to get a quick look at the resulting data.</p>
 <pre class="r"><code># Put the predicted probability and class (at 0.5 threshold) at the end of the dataframe
 predProbLogit &lt;- predict(LogitStep, type = &quot;response&quot;, newdata = LectureTest)
 predClassLogit &lt;- factor(predict(LogitStep, type = &quot;response&quot;, newdata=LectureTest) &gt; 0.5, levels = c(FALSE,TRUE), labels = c(&quot;No&quot;,&quot;Yes&quot;))
@@ -216,15 +210,15 @@ LectureTestPlotting$predClassLogit &lt;- predClassLogit
 
 summary(LectureTestPlotting)  # look at a summary of the updated data frame</code></pre>
 <pre><code>##  default    student       balance           income      predProbLogit      
-##  No :1942   No :1393   Min.   :   0.0   Min.   : 1498   Min.   :0.0000074  
-##  Yes:  58   Yes: 607   1st Qu.: 474.8   1st Qu.:21334   1st Qu.:0.0002136  
-##                        Median : 839.1   Median :34277   Median :0.0017802  
-##                        Mean   : 838.4   Mean   :33235   Mean   :0.0336231  
-##                        3rd Qu.:1163.1   3rd Qu.:43579   3rd Qu.:0.0118639  
-##                        Max.   :2461.5   Max.   :70022   Max.   :0.9494902  
+##  No :1934   No :1393   Min.   :   0.0   Min.   : 5297   Min.   :0.0000098  
+##  Yes:  66   Yes: 607   1st Qu.: 481.0   1st Qu.:21146   1st Qu.:0.0002656  
+##                        Median : 814.3   Median :34510   Median :0.0017564  
+##                        Mean   : 831.9   Mean   :33527   Mean   :0.0334465  
+##                        3rd Qu.:1166.7   3rd Qu.:43919   3rd Qu.:0.0130466  
+##                        Max.   :2461.5   Max.   :70022   Max.   :0.9530186  
 ##  predClassLogit
-##  No :1971      
-##  Yes:  29      
+##  No :1974      
+##  Yes:  26      
 ##                
 ##                
 ##                
@@ -258,40 +252,41 @@ plotLogitClass &lt;- ggplot(data = LectureTestPlotting,
 
 # Plot original data (top row) and predicted probability (bottom row)
 grid.arrange(plotTest, plotLogit, plotLogitClass, nrow = 3)</code></pre>
-<p><img src="/post/Logistic-Regression_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
-<p>Finally, let’s calculate some performance statistics on the test data. We can get the full suite of performance statistics based on the confusion matrix using the <em>confusionMatrix()</em> command provided by the caret packages.</p>
+<p><img src="/post/logistic_regression/Logistic-Regression_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>Finally, let's calculate some performance statistics on the test data. We can get the full suite of performance statistics based on the confusion matrix using the <em>confusionMatrix()</em> command provided by the caret packages.</p>
 <pre class="r"><code># Generate a confusion matrix and performance statistics on test dataset
 confusionMatrix(data=predClassLogit, reference=LectureTest$default) </code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction   No  Yes
-##        No  1928   43
-##        Yes   14   15
-##                                           
-##                Accuracy : 0.9715          
-##                  95% CI : (0.9632, 0.9783)
-##     No Information Rate : 0.971           
-##     P-Value [Acc &gt; NIR] : 0.4817656       
-##                                           
-##                   Kappa : 0.3319          
-##  Mcnemar&#39;s Test P-Value : 0.0002083       
-##                                           
-##             Sensitivity : 0.9928          
-##             Specificity : 0.2586          
-##          Pos Pred Value : 0.9782          
-##          Neg Pred Value : 0.5172          
-##              Prevalence : 0.9710          
-##          Detection Rate : 0.9640          
-##    Detection Prevalence : 0.9855          
-##       Balanced Accuracy : 0.6257          
-##                                           
-##        &#39;Positive&#39; Class : No              
+##        No  1928   46
+##        Yes    6   20
+##                                          
+##                Accuracy : 0.974          
+##                  95% CI : (0.966, 0.9805)
+##     No Information Rate : 0.967          
+##     P-Value [Acc &gt; NIR] : 0.04176        
+##                                          
+##                   Kappa : 0.424          
+##                                          
+##  Mcnemar&#39;s Test P-Value : 6.362e-08      
+##                                          
+##             Sensitivity : 0.9969         
+##             Specificity : 0.3030         
+##          Pos Pred Value : 0.9767         
+##          Neg Pred Value : 0.7692         
+##              Prevalence : 0.9670         
+##          Detection Rate : 0.9640         
+##    Detection Prevalence : 0.9870         
+##       Balanced Accuracy : 0.6500         
+##                                          
+##        &#39;Positive&#39; Class : No             
 ## </code></pre>
-<p>Evaluating the performance of the model on the training dataset above, we can see that the model does a pretty good job of predicting overall, but that it isn’t very good at identifying when someone is going to default at the classification threshold of 0.5. The model correctly predicts only 20 out of 66 of the people who will default at that threshold. As we will discuss further in the course, we may want to adjust our threshold depending on our problem and we may want to try to find a better-performing model (more to follow). However, the exercise above provides a code example for fitting a logistic regression model that can be adapted for our practical application problem.</p>
+<p>Evaluating the performance of the model on the training dataset above, we can see that the model does a pretty good job of predicting overall, but that it isn't very good at identifying when someone is going to default at the classification threshold of 0.5. The model correctly predicts only 20 out of 66 of the people who will default at that threshold. As we will discuss further in the course, we may want to adjust our threshold depending on our problem and we may want to try to find a better-performing model (more to follow). However, the exercise above provides a code example for fitting a logistic regression model that can be adapted for our practical application problem.</p>
 <p>Before moving on, perform the following actions to save your work and prepare for the practical application:</p>
 <ul>
-<li>Save your workspace as “LectureExampleData2.RData” (By typing save.image(“LectureExampleData1.RData”) function)</li>
-<li>Save your script to a file named “LectureExampleData2.R”</li>
+<li>Save your workspace as &quot;LectureExampleData2.RData&quot; (By typing save.image(“LectureExampleData1.RData”) function)</li>
+<li>Save your script to a file named &quot;LectureExampleData2.R&quot;</li>
 </ul>
 </div>

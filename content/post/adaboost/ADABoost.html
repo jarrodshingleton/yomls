@@ -20,18 +20,10 @@ output: md_document
 <p>Let’s begin by setting up our environment to continue with our lecture examples. First, make sure you have all the needed packages loaded and add some new ones for fitting Classification and Regression Trees (CART), Random Forest Models, and for making some pretty pictures (note - the standard way to do this in the R community is to always put the needed libraries at the very top of your script, so adjust your script file accordingly):</p>
 <pre class="r"><code>### Load needed libraries
 library(e1071)
-library(ISLR)</code></pre>
-<pre><code>## Warning: package &#39;ISLR&#39; was built under R version 3.5.3</code></pre>
-<pre class="r"><code>library(ggplot2)</code></pre>
-<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 3.5.1</code></pre>
-<pre><code>## Warning: As of rlang 0.4.0, dplyr must be at least version 0.8.0.
-## * dplyr 0.7.6 is too old for rlang 0.4.5.
-## * Please update dplyr to the latest version.
-## * Updating packages on Windows requires precautions:
-##   &lt;https://github.com/jennybc/what-they-forgot/issues/62&gt;</code></pre>
-<pre class="r"><code>library(gridExtra)</code></pre>
-<pre><code>## Warning: package &#39;gridExtra&#39; was built under R version 3.5.1</code></pre>
-<pre class="r"><code>library(caret)
+library(ISLR)
+library(ggplot2)
+library(gridExtra)
+library(caret)
 
 # New model libraries
 library(rpart) # new library for CART modeling
@@ -39,7 +31,6 @@ library(randomForest) # new library added for random forests and bagging
 
 # New package for making pretty pictures of CART trees
 library(rpart.plot)</code></pre>
-<pre><code>## Warning: package &#39;rpart.plot&#39; was built under R version 3.5.2</code></pre>
 </div>
 <div id="step-2-confirm-datasets-loaded-and-visualize" class="section level1">
 <h1>Step 2: Confirm Datasets Loaded and Visualize</h1>
@@ -57,11 +48,11 @@ LectureTestPlotting &lt;- LectureTest</code></pre>
 <pre class="r"><code># Testing data summary
 summary(LectureTest)</code></pre>
 <pre><code>##  default    student       balance           income     
-##  No :1942   No :1393   Min.   :   0.0   Min.   : 1498  
-##  Yes:  58   Yes: 607   1st Qu.: 474.8   1st Qu.:21334  
-##                        Median : 839.1   Median :34277  
-##                        Mean   : 838.4   Mean   :33235  
-##                        3rd Qu.:1163.1   3rd Qu.:43579  
+##  No :1934   No :1393   Min.   :   0.0   Min.   : 5297  
+##  Yes:  66   Yes: 607   1st Qu.: 481.0   1st Qu.:21146  
+##                        Median : 814.3   Median :34510  
+##                        Mean   : 831.9   Mean   :33527  
+##                        3rd Qu.:1166.7   3rd Qu.:43919  
 ##                        Max.   :2461.5   Max.   :70022</code></pre>
 <pre class="r"><code>## Plot Lecture Train Data
 plotTrain &lt;- ggplot(data = LectureTrain,
@@ -81,7 +72,7 @@ plotTest &lt;- ggplot(data = LectureTest,
   theme(legend.key = element_blank()) +
   labs(title = &quot;Lecture Test Data&quot;)
 grid.arrange(plotTrain, plotTest, nrow = 2)</code></pre>
-<p><img src="/post/ADABoost_files/figure-html/Plotting%20Default%20Data-1.png" width="672" /></p>
+<p><img src="/post/adaboost/ADABoost_files/figure-html/Plotting%20Default%20Data-1.png" width="672" /></p>
 </div>
 <div id="recall-cart-model" class="section level1">
 <h1>Recall: CART model</h1>
@@ -95,72 +86,71 @@ summary(CART)</code></pre>
 ##   n= 8000 
 ## 
 ##           CP nsplit rel error    xerror       xstd
-## 1 0.13818182      0 1.0000000 1.0000000 0.05925676
-## 2 0.06909091      1 0.8618182 0.8836364 0.05581775
-## 3 0.04727273      2 0.7927273 0.8290909 0.05411979
-## 4 0.01000000      3 0.7454545 0.8000000 0.05318920
+## 1 0.09925094      0 1.0000000 1.0000000 0.06016908
+## 2 0.02247191      2 0.8014981 0.8314607 0.05502426
+## 3 0.01000000      3 0.7790262 0.8389513 0.05526445
 ## 
 ## Variable importance
 ## balance  income student 
-##      93       4       3 
+##      94       4       2 
 ## 
-## Node number 1: 8000 observations,    complexity param=0.1381818
-##   predicted class=No   expected loss=0.034375  P(node) =1
-##     class counts:  7725   275
-##    probabilities: 0.966 0.034 
-##   left son=2 (7758 obs) right son=3 (242 obs)
+## Node number 1: 8000 observations,    complexity param=0.09925094
+##   predicted class=No   expected loss=0.033375  P(node) =1
+##     class counts:  7733   267
+##    probabilities: 0.967 0.033 
+##   left son=2 (7754 obs) right son=3 (246 obs)
 ##   Primary splits:
-##       balance &lt; 1788.349 to the left,  improve=147.7756000, (0 missing)
-##       student splits as  LR,           improve=  0.7963764, (0 missing)
-##       income  &lt; 19655.99 to the right, improve=  0.6427058, (0 missing)
+##       balance &lt; 1788.617 to the left,  improve=130.6222000, (0 missing)
+##       student splits as  LR,           improve=  0.6965178, (0 missing)
+##       income  &lt; 26430.88 to the right, improve=  0.6034235, (0 missing)
 ## 
-## Node number 2: 7758 observations
-##   predicted class=No   expected loss=0.01740139  P(node) =0.96975
-##     class counts:  7623   135
+## Node number 2: 7754 observations
+##   predicted class=No   expected loss=0.0172814  P(node) =0.96925
+##     class counts:  7620   134
 ##    probabilities: 0.983 0.017 
 ## 
-## Node number 3: 242 observations,    complexity param=0.06909091
-##   predicted class=Yes  expected loss=0.4214876  P(node) =0.03025
-##     class counts:   102   140
-##    probabilities: 0.421 0.579 
-##   left son=6 (145 obs) right son=7 (97 obs)
+## Node number 3: 246 observations,    complexity param=0.09925094
+##   predicted class=Yes  expected loss=0.4593496  P(node) =0.03075
+##     class counts:   113   133
+##    probabilities: 0.459 0.541 
+##   left son=6 (149 obs) right son=7 (97 obs)
 ##   Primary splits:
-##       balance &lt; 1971.915 to the left,  improve=15.008780, (0 missing)
-##       income  &lt; 27777.45 to the left,  improve= 6.082185, (0 missing)
-##       student splits as  RL,           improve= 3.300105, (0 missing)
+##       balance &lt; 1972.743 to the left,  improve=17.320740, (0 missing)
+##       income  &lt; 27432.68 to the left,  improve= 8.238607, (0 missing)
+##       student splits as  RL,           improve= 4.531466, (0 missing)
 ##   Surrogate splits:
-##       income &lt; 49827.29 to the left,  agree=0.612, adj=0.031, (0 split)
+##       income &lt; 49819.21 to the left,  agree=0.622, adj=0.041, (0 split)
 ## 
-## Node number 6: 145 observations,    complexity param=0.04727273
-##   predicted class=No   expected loss=0.4344828  P(node) =0.018125
-##     class counts:    82    63
-##    probabilities: 0.566 0.434 
-##   left son=12 (84 obs) right son=13 (61 obs)
+## Node number 6: 149 observations,    complexity param=0.02247191
+##   predicted class=No   expected loss=0.3892617  P(node) =0.018625
+##     class counts:    91    58
+##    probabilities: 0.611 0.389 
+##   left son=12 (93 obs) right son=13 (56 obs)
 ##   Primary splits:
-##       income  &lt; 27874.34 to the left,  improve=6.235656, (0 missing)
-##       student splits as  RL,           improve=3.959527, (0 missing)
-##       balance &lt; 1890.639 to the left,  improve=2.831309, (0 missing)
+##       income  &lt; 27874.34 to the left,  improve=4.844486, (0 missing)
+##       student splits as  RL,           improve=2.448568, (0 missing)
+##       balance &lt; 1856.76  to the left,  improve=1.547335, (0 missing)
 ##   Surrogate splits:
-##       student splits as  RL,           agree=0.924, adj=0.820, (0 split)
-##       balance &lt; 1968.003 to the left,  agree=0.586, adj=0.016, (0 split)
+##       student splits as  RL,           agree=0.913, adj=0.768, (0 split)
+##       balance &lt; 1962.872 to the left,  agree=0.638, adj=0.036, (0 split)
 ## 
 ## Node number 7: 97 observations
-##   predicted class=Yes  expected loss=0.2061856  P(node) =0.012125
-##     class counts:    20    77
-##    probabilities: 0.206 0.794 
+##   predicted class=Yes  expected loss=0.2268041  P(node) =0.012125
+##     class counts:    22    75
+##    probabilities: 0.227 0.773 
 ## 
-## Node number 12: 84 observations
-##   predicted class=No   expected loss=0.3095238  P(node) =0.0105
-##     class counts:    58    26
-##    probabilities: 0.690 0.310 
+## Node number 12: 93 observations
+##   predicted class=No   expected loss=0.2903226  P(node) =0.011625
+##     class counts:    66    27
+##    probabilities: 0.710 0.290 
 ## 
-## Node number 13: 61 observations
-##   predicted class=Yes  expected loss=0.3934426  P(node) =0.007625
-##     class counts:    24    37
-##    probabilities: 0.393 0.607</code></pre>
+## Node number 13: 56 observations
+##   predicted class=Yes  expected loss=0.4464286  P(node) =0.007
+##     class counts:    25    31
+##    probabilities: 0.446 0.554</code></pre>
 <pre class="r"><code># Make a plot of the classification tree rules
 prp(CART)</code></pre>
-<p><img src="/post/ADABoost_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p><img src="/post/adaboost/ADABoost_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
 <p>Look at that. You now have a visual summary of how the CART model (in this case a classification model) is going to make a decision about whether or not someone is going to default. CART models offer maximum explainability. We have found that one of the great benefits to using random forest models is that it is relatively easy to explain to people how a random forest model works if you show them a CART output first (hence this portion of the practical exercise). Let’s see how this model performs on the test dataset:</p>
 <pre class="r"><code># Summarize and plot the performance of the classification tree
 
@@ -179,34 +169,35 @@ plotClassCART &lt;- ggplot(data = LectureTestPlotting,
   theme(legend.key = element_blank()) +
   labs(title = &quot;Predicted class for CART Model&quot;)
 grid.arrange(plotTest, plotClassCART, nrow = 2)</code></pre>
-<p><img src="/post/ADABoost_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p><img src="/post/adaboost/ADABoost_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 <pre class="r"><code># Report confusion matrix from on the test dataset
 confusionMatrix(predClassCART, LectureTest$default)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction   No  Yes
-##        No  1926   39
-##        Yes   16   19
-##                                           
-##                Accuracy : 0.9725          
-##                  95% CI : (0.9644, 0.9792)
-##     No Information Rate : 0.971           
-##     P-Value [Acc &gt; NIR] : 0.376621        
-##                                           
-##                   Kappa : 0.3954          
-##  Mcnemar&#39;s Test P-Value : 0.003012        
-##                                           
-##             Sensitivity : 0.9918          
-##             Specificity : 0.3276          
-##          Pos Pred Value : 0.9802          
-##          Neg Pred Value : 0.5429          
-##              Prevalence : 0.9710          
-##          Detection Rate : 0.9630          
-##    Detection Prevalence : 0.9825          
-##       Balanced Accuracy : 0.6597          
-##                                           
-##        &#39;Positive&#39; Class : No              
+##        No  1921   39
+##        Yes   13   27
+##                                          
+##                Accuracy : 0.974          
+##                  95% CI : (0.966, 0.9805)
+##     No Information Rate : 0.967          
+##     P-Value [Acc &gt; NIR] : 0.0417631      
+##                                          
+##                   Kappa : 0.4969         
+##                                          
+##  Mcnemar&#39;s Test P-Value : 0.0005265      
+##                                          
+##             Sensitivity : 0.9933         
+##             Specificity : 0.4091         
+##          Pos Pred Value : 0.9801         
+##          Neg Pred Value : 0.6750         
+##              Prevalence : 0.9670         
+##          Detection Rate : 0.9605         
+##    Detection Prevalence : 0.9800         
+##       Balanced Accuracy : 0.7012         
+##                                          
+##        &#39;Positive&#39; Class : No             
 ## </code></pre>
 </div>
 </div>
@@ -274,32 +265,33 @@ plotClassRF &lt;- ggplot(data = LectureTestPlotting,
 
 # Standard Performance Plot
 grid.arrange(plotTest, plotProbRF, plotClassRF, nrow = 3)</code></pre>
-<p><img src="/post/ADABoost_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><img src="/post/adaboost/ADABoost_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
 <pre class="r"><code># Report confusion matrix from on the test dataset
 confusionMatrix(predClassRF , LectureTest$default)</code></pre>
 <pre><code>## Confusion Matrix and Statistics
 ## 
 ##           Reference
 ## Prediction   No  Yes
-##        No  1931   43
-##        Yes   11   15
+##        No  1929   48
+##        Yes    5   18
 ##                                           
-##                Accuracy : 0.973           
-##                  95% CI : (0.9649, 0.9797)
-##     No Information Rate : 0.971           
-##     P-Value [Acc &gt; NIR] : 0.3264          
+##                Accuracy : 0.9735          
+##                  95% CI : (0.9655, 0.9801)
+##     No Information Rate : 0.967           
+##     P-Value [Acc &gt; NIR] : 0.0552          
 ##                                           
-##                   Kappa : 0.3454          
-##  Mcnemar&#39;s Test P-Value : 2.459e-05       
+##                   Kappa : 0.3942          
 ##                                           
-##             Sensitivity : 0.9943          
-##             Specificity : 0.2586          
-##          Pos Pred Value : 0.9782          
-##          Neg Pred Value : 0.5769          
-##              Prevalence : 0.9710          
-##          Detection Rate : 0.9655          
-##    Detection Prevalence : 0.9870          
-##       Balanced Accuracy : 0.6265          
+##  Mcnemar&#39;s Test P-Value : 7.968e-09       
+##                                           
+##             Sensitivity : 0.9974          
+##             Specificity : 0.2727          
+##          Pos Pred Value : 0.9757          
+##          Neg Pred Value : 0.7826          
+##              Prevalence : 0.9670          
+##          Detection Rate : 0.9645          
+##    Detection Prevalence : 0.9885          
+##       Balanced Accuracy : 0.6351          
 ##                                           
 ##        &#39;Positive&#39; Class : No              
 ## </code></pre>

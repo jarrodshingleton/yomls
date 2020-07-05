@@ -11,7 +11,7 @@ output: md_document
 <h1>Week 2 Practice in Lab</h1>
 <div id="step-1-set-the-working-directory-for-reading-in-files." class="section level2">
 <h2>Step 1: Set the working directory for reading in files.</h2>
-<p>setwd(‘/insert full path to your folder’) Remember, if you can’t get the setwd (set working directory) function to work, try ?setwd to get some additional help.</p>
+<p>setwd('/insert full path to your folder') Remember, if you can’t get the setwd (set working directory) function to work, try ?setwd to get some additional help.</p>
 </div>
 <div id="step-2-read-csv-file-from-on-line-source." class="section level2">
 <h2>Step 2: Read csv file from on-line source.</h2>
@@ -82,19 +82,19 @@ coef(lm.fit)</code></pre>
 <p>These values are set as an explanatory variable.</p>
 <p>In order to plot Ads$TV as y axis and Ads$sales as x axis using plot() function, type:</p>
 <pre class="r"><code>plot(Ads$TV,Ads$sales)</code></pre>
-<p><img src="/post/Linear-Regression_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p><img src="/post/linear_regression/Linear-Regression_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
 <p>Then we want to add a regression line in the plot. You will use abline() function</p>
 <pre class="r"><code>lm.fit&lt;-lm(sales~TV, data=Ads)
 plot(Ads$TV,Ads$sales)
 abline(lm.fit)</code></pre>
-<p><img src="/post/Linear-Regression_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p><img src="/post/linear_regression/Linear-Regression_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
 <p>If you want to draw the residual lines as you have seen in the lecture you can type:</p>
 <pre class="r"><code>lm.fit&lt;-lm(sales~TV, data=Ads)
 plot(Ads$TV,Ads$sales)
 abline(lm.fit)
 pre &lt;- predict(lm.fit) 
 segments(Ads$TV,Ads$sales, Ads$TV, pre, col=&quot;red&quot;)</code></pre>
-<p><img src="/post/Linear-Regression_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p><img src="/post/linear_regression/Linear-Regression_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 </div>
 <div id="step-4-estimating-the-coefficients-for-multiple-linear-regression" class="section level2">
 <h2>Step 4: Estimating the coefficients for multiple linear regression</h2>
