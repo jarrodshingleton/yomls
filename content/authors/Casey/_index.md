@@ -23,7 +23,11 @@ bio: Our research interest include duing awesome stuff in the ML world.
 interests:
 - R
 - Python
-- SASS
+- SAS
+- Fishing
+- Guitar
+- Video Games
+- Board Games
 
 education:
   courses:
