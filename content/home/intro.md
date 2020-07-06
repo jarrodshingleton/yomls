@@ -5,7 +5,7 @@
 
 widget = "blank"  # See https://sourcethemes.com/academic/docs/page-builder/
 headless = true  # This file represents a page section.
-active = false  # Activate this widget? true/false
+active = true  # Activate this widget? true/false
 weight = 15  # Order that this section will appear.
 
 title = "Machine Learning Algorithms"
@@ -50,18 +50,11 @@ subtitle = ""
  css_class = ""
 +++
 
-Welcome to our little olde shoppe of **Machine Learning Algorithms**. This site strives to make it easy to connect data sets with various machine learning algorithms based on the data structure and temperment. We include code examples from both R and Python.  Some of the algorithms we post here include:
+Welcome to our little olde shoppe of **Machine Learning Algorithms**. This site strives to make it easy to connect data sets with various machine learning algorithms based on the data structure and characteristics. We include code examples from both R and Python.  Some of the algorithms we post here include:
 
-- [**Random Forests**](https://sourcethemes.com/academic/) # Placeholder weblink...
+- [**Linear Regression**]{{< ref "post/linear_regression/index.md" >}}
 - [**Neural Nets Primer**]
 - [**Etc..**]
 
 **We add more as we go,** so check back here regularly!
 
-**[This a link](https://sourcethemes.com/academic/docs/install/) embedded in the page.**
-
-{{% alert note %}}
- This an alert text box on the page [elements](https://sourcethemes.com/academic/docs/writing-markdown-latex/) to the [*Blank* widget](https://sourcethemes.com/academic/docs/widgets/).
- 
-Backgrounds can be applied to any section. Here, the *background* option is set give an *image parallax* effect.
-{{% /alert %}}
