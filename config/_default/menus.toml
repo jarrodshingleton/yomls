@@ -5,23 +5,37 @@
 
 [[main]]
   name = "Ye Olde Home"
-  url = "#about"
+  url = "#intro"
   weight = 10
 
 [[main]]
+  name = "The Main Shoppe"
+  identifier = "content"
+  weight = 20
+
+
+[[main]]
+  parent = "content"
   name = "Talking over a Pint (Our Humble Blog)"
   url = "post/"
   weight = 20
 
 [[main]]
+  parent = "content"
   name = "Our Labor (Projects)"
   url = "#projects"
   weight = 30
 
 [[main]]
+  parent = "content"
   name = "The Meat (ML Articles and Sundries)"
   url = "#featured"
   weight = 40
+
+[[main]]
+  name = "Jarrod's Corner"
+  url = ""
+  weight = 50
 
 [[main]]
   name = "Contact"

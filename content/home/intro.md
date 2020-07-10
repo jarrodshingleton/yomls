@@ -6,9 +6,9 @@
 widget = "blank"  # See https://sourcethemes.com/academic/docs/page-builder/
 headless = true  # This file represents a page section.
 active = true  # Activate this widget? true/false
-weight = 15  # Order that this section will appear.
+weight = 1  # Order that this section will appear.
 
-title = "Machine Learning Algorithms"
+title = "Ye Olde Machine Learning Shoppe"
 subtitle = ""
 
 [design]
@@ -40,7 +40,7 @@ subtitle = ""
 
 [design.spacing]
   # Customize the section spacing. Order is top, right, bottom, left.
-  padding = ["20px", "0", "20px", "0"]
+  padding = ["20px", "0", "40px", "0"]
 
 [advanced]
  # Custom CSS. 
@@ -52,7 +52,7 @@ subtitle = ""
 
 Welcome to our little olde shoppe of **Machine Learning Algorithms**. This site strives to make it easy to connect data sets with various machine learning algorithms based on the data structure and characteristics. We include code examples from both R and Python.  Some of the algorithms we post here include:
 
-- [**Linear Regression**]{{< ref "post/linear_regression/index.md" >}}
+- [**Linear Regression**](post/linear_regression/index.md)
 - [**Neural Nets Primer**]
 - [**Etc..**]
 
