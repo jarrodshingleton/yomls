@@ -23,18 +23,18 @@
 [[main]]
   parent = "content"
   name = "Our Labor (Projects)"
-  url = "#projects"
+  url = "project/"
   weight = 30
 
 [[main]]
   parent = "content"
   name = "The Meat (ML Articles and Sundries)"
-  url = "#featured"
+  url = "tutorials/"
   weight = 40
 
 [[main]]
   name = "Jarrod's Corner"
-  url = ""
+  url = "jcorner/"
   weight = 50
 
 [[main]]
