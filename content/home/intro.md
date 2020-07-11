@@ -50,6 +50,10 @@ subtitle = ""
  css_class = ""
 +++
 
+{{% alert note %}}
+Our YOMLS site is still under construction. Please excuse the mess. If you would like to be notified when we have added more content (or even any content!), head on down to the [*contacts*](#contact) and drop us a note! Thanks for stopping by and we hope to have this finished soon.
+{{% /alert %}}
+
 Welcome to our little olde shoppe of **Machine Learning Algorithms**. This site strives to make it easy to connect data sets with various machine learning algorithms based on the data structure and characteristics. We include code examples from both R and Python.  
 
 -Should put a fun picture here!
