@@ -30,6 +30,7 @@ interests:
 education:
   courses:
   - course: MS in Math/OR
+    institution: Naval Postgraduate School
 
 # Social/Academic Networking
 # For available icons, see: https://sourcethemes.com/academic/docs/page-builder/#icons

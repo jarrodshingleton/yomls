@@ -28,12 +28,16 @@ interests:
 - Guitar
 - Video Games
 - Board Games
+- 'Baseball :baseball:'
 
 education:
   courses:
-  - course: MS Operations Research (Air Force Institute of Technology, Focus in Applied Statistics and Simulation)
-  - course: MS Engineering Management (Missouri University of Science and Technology, Construction Management Certificate)
-  - course: BS Mechanical Engineering (New Mexico State University)
+  - course: MS Operations Research (Focus in Applied Statistics and Simulation)
+    institution: Air Force Institute of Technology
+  - course: MS Engineering Management (Construction Management Certificate)
+    institution: Missouri University of Science and Technology
+  - course: BS Mechanical Engineering
+    institution: New Mexico State University
 
 # Social/Academic Networking
 # For available icons, see: https://sourcethemes.com/academic/docs/page-builder/#icons
