@@ -136,7 +136,7 @@ function, type:
 
     plot(Ads$TV,Ads$sales)
 
-![](Linear-Regression_files/figure-markdown_strict/unnamed-chunk-7-1.png)
+{{< figure src="unnamed-chunk-7-1.png">}}
 
 Then we want to add a regression line in the plot. You will use abline()
 function
@@ -145,7 +145,7 @@ function
     plot(Ads$TV,Ads$sales)
     abline(lm.fit)
 
-![](Linear-Regression_files/figure-markdown_strict/unnamed-chunk-8-1.png)
+{{< figure src = "unnamed-chunk-8-1.png" >}}
 
 If you want to draw the residual lines as you have seen in the lecture
 you can type:
@@ -156,7 +156,7 @@ you can type:
     pre <- predict(lm.fit) 
     segments(Ads$TV,Ads$sales, Ads$TV, pre, col="red")
 
-![](Linear-Regression_files/figure-markdown_strict/unnamed-chunk-9-1.png)
+{{< figure src = "unnamed-chunk-9-1.png" >}}
 
 Step 4: Estimating the coefficients for multiple linear regression
 ------------------------------------------------------------------

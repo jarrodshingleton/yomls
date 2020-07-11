@@ -50,11 +50,9 @@ subtitle = ""
  css_class = ""
 +++
 
-Welcome to our little olde shoppe of **Machine Learning Algorithms**. This site strives to make it easy to connect data sets with various machine learning algorithms based on the data structure and characteristics. We include code examples from both R and Python.  Some of the algorithms we post here include:
+Welcome to our little olde shoppe of **Machine Learning Algorithms**. This site strives to make it easy to connect data sets with various machine learning algorithms based on the data structure and characteristics. We include code examples from both R and Python.  
 
-- [**Linear Regression**](post/linear_regression/index.md)
-- [**Neural Nets Primer**]
-- [**Etc..**]
+-Should put a fun picture here!
 
 **We add more as we go,** so check back here regularly!
 

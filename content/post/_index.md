@@ -1,5 +1,5 @@
 ---
-title: Posts
+title: Talking Over a Pint (Our Humble Blog)
 
 # View.
 #   1 = List
