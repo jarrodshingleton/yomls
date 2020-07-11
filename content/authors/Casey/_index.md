@@ -72,4 +72,6 @@ user_groups:
 
 Casey is a Dude. Jarrod is another dude. They are the best of friends. They like to play games together and think deep thoughts.
 
-![An Eye](/img/SpellBook01_02.png)
+{{< figure src="/img/SpellBook01_02.png" height=50 width=50 >}}
+
+
