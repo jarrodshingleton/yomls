@@ -24,7 +24,7 @@ interests:
 - R
 - Python
 - Machine Learning Techniques
-- Classical Guitar
+- 'Classical Guitar :guitar:'
 - Board Games
 
 education:

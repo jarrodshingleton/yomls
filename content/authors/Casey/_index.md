@@ -25,7 +25,7 @@ interests:
 - Python
 - SAS
 - Fishing
-- Guitar
+- 'Guitar :guitar:'
 - Video Games
 - Board Games
 - 'Baseball :baseball:'
