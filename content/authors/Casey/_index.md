@@ -14,11 +14,11 @@ role: Co-author of YOMLS
 
 # Organizations/Affiliations
 organizations:
-- name: LTC (R). ORSA. USAA
+- name: LTC (R). ORSA. Decision Scientist. 
   url: ""
 
 # Short bio (displayed in user profile at end of posts)
-bio: Our research interest include duing awesome stuff in the ML world.
+bio: MS in Operations Research, currently working as a Decision Scientist, heavily involved in model development. Interests in learning and developing in the Data Science space.
 
 interests:
 - R
@@ -31,7 +31,9 @@ interests:
 
 education:
   courses:
-  - course: MS in Math/OR
+  - course: MS Operations Research (Air Force Institute of Technology, Focus in Applied Statistics and Simulation)
+  - course: MS Engineering Management (Missouri University of Science and Technology, Construction Management Certificate)
+  - course: BS Mechanical Engineering (New Mexico State University)
 
 # Social/Academic Networking
 # For available icons, see: https://sourcethemes.com/academic/docs/page-builder/#icons
@@ -41,6 +43,9 @@ social:
 - icon: envelope
   icon_pack: fas
   link: '#contact'  # For a direct email link, use "mailto:test@example.org".
+- icon: linkedin
+  icon_pack: fab
+  link: https://www.linkedin.com/in/caseyconnors
 # - icon: twitter
 #   icon_pack: fab
 #   link: https://twitter.com/GeorgeCushen
@@ -52,9 +57,9 @@ social:
 #   link: https://github.com/gcushen
 # Link to a PDF of your resume/CV from the About widget.
 # To enable, copy your resume/CV to `static/files/cv.pdf` and uncomment the lines below.
-# - icon: cv
-#   icon_pack: ai
-#   link: files/cv.pdf
+- icon: cv
+  icon_pack: ai
+  link: files/Caseyres.pdf
 
 # Enter email to display Gravatar (if Gravatar enabled in Config)
 email: ""
@@ -65,4 +70,6 @@ user_groups:
 - Administrators
 ---
 
-Casey is a Dude. Jarrod is another dude. They are the best of friends.
+Casey is a Dude. Jarrod is another dude. They are the best of friends. They like to play games together and think deep thoughts.
+
+![An Eye](/img/SpellBook01_02.png)
