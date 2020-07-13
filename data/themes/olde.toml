@@ -22,5 +22,5 @@ menu_title = "#2F4F4F"
 menu_link_hover = "#FF0000"
 
 # Home sections
-home_section_odd = "rgb(255, 228, 181)"
-home_section_even = "rgb(255, 250, 240)"
+home_section_odd = "moccasin"
+home_section_even = "darkgray"
