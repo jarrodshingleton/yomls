@@ -9,7 +9,7 @@ output:
 
 Last week, one of my coworkers was asked to analyse some survey data. Unfortunately, much of that survey data was in the form of the dreaded pdf (portable document format, if you were ever curious). Now, sometimes pdf is not that difficult to deal with, when it is a small amount, like just one table. But, what is you have multiple pages and tables and things to take out of the pdf in question? That is what we are going to cover here.
 
-Okay, first, I need a pdf to read. For this example, we are going to be reading in a file called sample.pdf I downloaded from http://www.africau.edu/. It is a very uncomplicated pdf that will serve nicely for this demonstration.
+Okay, first, I need a pdf to read. For this example, we are going to be reading in a file called [sample.pdf](https://github.com/jarrodshingleton/yomls/blob/master/content/post/pdfReading/samplePDF.pdf) I downloaded from http://www.africau.edu/. It is a very uncomplicated pdf that will serve nicely for this demonstration.
 
 As with everything that we do in a programming language, there is an app for that. And this app (or package, in this case) is called **pdftools**. In addition, we will pull in **dplyr**, as it is one of my all time favorite packages.
 
