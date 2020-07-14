@@ -2,18 +2,18 @@
 authors:
 - jarrod
 categories: []
-date: "2020-02-05T00:00:00Z"
+date: "2020-07-13T00:00:00Z"
 draft: false
 featured: false
 image:
   caption: ""
   focal_point: ""
-lastMod: "2020-09-05T00:00:00Z"
+lastMod: "2020-07-13T00:00:00Z"
 projects: []
-subtitle: Picking between two choices - Which one is it?
-summary: Picking between two choices - Which one is it?
-tags: [R, models, ml, machine learning]
-title: An Intro to Logistic Regression
+subtitle: PDF Schmeedf. I can read from that! No Problem...right?
+summary: PDF Schmeedf. I can read from that! No Problem...right?
+tags: [R, models, ml, machine learning, data mining]
+title: Reading Just a Bit from the Dastardly PDF.
 ---
 
 
