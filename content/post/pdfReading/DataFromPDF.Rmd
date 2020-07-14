@@ -1,34 +1,38 @@
 ---
-title: "DataFromPDF"
+title: "Get some things from a pdf!"
 author: "Jarrod Shingleton"
 date: "7/13/2020"
-output: html_document
+output: 
+  html_document: 
+    keep_md: yes
 ---
 
 Last week, one of my coworkers was asked to analyse some survey data. Unfortunately, much of that survey data was in the form of the dreaded pdf (portable document format, if you were ever curious). Now, sometimes pdf is not that difficult to deal with, when it is a small amount, like just one table. But, what is you have multiple pages and tables and things to take out of the pdf in question? That is what we are going to cover here.
 
-Okay, first, I need a pdf to read. For this example, we are going to be reading in a file called sample.pdf I downloaded from http://www.africau.edu/. It is a very uncomplicated pdf that will serve nicely for this demonstration. 
+Okay, first, I need a pdf to read. For this example, we are going to be reading in a file called sample.pdf I downloaded from http://www.africau.edu/. It is a very uncomplicated pdf that will serve nicely for this demonstration.
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+As with everything that we do in a programming language, there is an app for that. And this app (or package, in this case) is called **pdftools**. In addition, we will pull in **dplyr**, as it is one of my all time favorite packages.
+
+```{r setup, message=FALSE}
+library(pdftools)
+library(dplyr)
 ```
 
-## R Markdown
+Now that we have our package, let's read in the pdf and see how terrible the format is to work with.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+pdf1<-pdf_text('samplePDF.pdf')
+head(pdf1)
 ```
 
-## Including Plots
+The first thing you should notice (if you took a look at the pdf before this) is that each page is an item in a vector and the second thing is that there are these odd "\n" things all over the place. Those are the carriage returns in your pdf document and they are a good place to break up the document. Here I am going to do that.
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r}
+pdf1<-strsplit(pdf1, split="\n")
+str(pdf1)
+head(pdf1)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+This splits the text up into more manageable bites, but puts them into a list. Lists are good and bad in R, but we will cover those more later. For now, you have the tool to pull in pdfs to R. Hooray!
+
+**Warning**: This will not work for pdfs that are images. Those are the devil.
