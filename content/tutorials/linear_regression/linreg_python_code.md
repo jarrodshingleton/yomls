@@ -1,20 +1,20 @@
 ---
-title: Example Problem using R
-linktitle: Example R code
+title: Example Problem with Linear Regression using Python
+linktitle: Example Python Code
 toc: true
 type: docs
 date: "2019-05-05T00:00:00+01:00"
-draft: true
+draft: false
 menu:
-  newtutorial:
+  linear_regression:
     parent: Example Problem
-    weight: 1
+    weight: 2
 
 # Prev/next pager order (if `docs_section_pager` enabled in `params.toml`)
-weight: 1
+weight: 2
 ---
 
-In this tutorial, talk about a serious problem:
+In this tutorial, talk about a serious problem, only let's use python this time:
 
 ## Intro the Problem
 
@@ -53,4 +53,4 @@ If we have any...
 
 ## Wrap Up
 
-And that's how we use R to implement this algorithm on this data set.  And why.  
+And that's how we use Python to implement this algorithm on this data set.  And why.  

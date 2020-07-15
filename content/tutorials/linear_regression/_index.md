@@ -1,21 +1,37 @@
 ---
-authors:
-- jarrod
-categories: []
+# Course title, summary, and position.
+linktitle: A Quick Introduction to Linear Regression
+summary: Learn how to use Linear Regression, one of the most popular and flexible techniques available to Data Scientists.
+weight: 1
+
+# Page metadata.
+title: Linear Regression
 date: "2020-02-05T00:00:00Z"
-draft: false
+lastmod: "2020-09-05T00:00:00Z"
+draft: false  # Is this a draft? true/false
+toc: true  # Show table of contents? true/false
+type: docs  # Do not modify.
+tags: [R, models, ml, machine learning]
 featured: false
+
 image:
   caption: ""
   focal_point: ""
-lastMod: "2020-09-05T00:00:00Z"
-projects: []
-subtitle: A Quick Introduction to Linear Regression
-summary: A Quick Introduction to Linear Regression
-tags: [R, models, ml, machine learning]
-title: Linear Regression
+
+# Add menu entry to sidebar.
+# - name: Declare this menu item as a parent with ID `name`.
+# - weight: Position of link in menu.
+menu:
+  linear_regression:
+    name: Overview
+    weight: 1
+
+authors:
+- jarrod
+categories: []
 ---
 
+## Overview and Refresher
 
 Week 2 Practice in Lab
 ======================

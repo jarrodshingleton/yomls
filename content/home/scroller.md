@@ -16,7 +16,7 @@ height = ""
 # Slides.
 # Duplicate an `[[item]]` block to add more slides.
 [[item]]
-  title = "Check out Jarrod's Blog post on Linear Regression!"
+  title = "Check out Jarrod's tutorial on Linear Regression!"
   content = "Linear Regression is Fun! :smile:"
   align = "center"  # Choose `center`, `left`, or `right`.
 
@@ -30,7 +30,7 @@ height = ""
   #   Activate the button by specifying a URL and button label below.
   #   Deactivate by commenting out parameters, prefixing lines with `#`.
   cta_label = "Let's see this magic."
-  cta_url = "/post/linear_regression/"
+  cta_url = "/tutorials/linear_regression/"
   cta_icon_pack = "fas"
   cta_icon = "graduation-cap"
 
