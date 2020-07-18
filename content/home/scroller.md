@@ -54,11 +54,20 @@ height = ""
   
 [[item]]
   title = "Thanks for visiting."
-  content = "We are just at the beginning of our quest. Please join us as we battle data sets with our Elfen forged ML algorithms! ![Picture](/static/img/mace_01_t.png)"
+  content = "We are just at the beginning of our quest. Please join us as we battle data sets with our Elfen forged ML algorithms!  ![Picture](/static/img/mace_01_t.png)"
   align = "center"
   
   overlay_color = "#4168E1"
   overlay_img = ""
   overlay_filter = 0.5
+  
+  [[item]]
+    title = "Every tried to figure out how to get data out of those pesky PDFs?"
+    content = "Check out [this](/post/pdfReading/) blog post on using R to extract data from a PDF"
+    align = "right"
+    overlay_color = "black"
+    overlay_img = ""
+    overlay_filter = 0.5
+    
   
 +++
