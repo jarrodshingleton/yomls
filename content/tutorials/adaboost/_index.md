@@ -1,20 +1,40 @@
 
 ---
-authors:
-- jarrod
-categories: []
+# Course title, summary, and position.
+linktitle: Practical Application of ADABoost
+summary: Learn what ADABoost is and how to use it.
+weight: 1
+
+# Page metadata.
+title: Practical Application of ADABoost
+subtitle: Using ADABoost to make your Random Forest models better
 date: "2020-02-05T00:00:00Z"
-draft: false
+lastMod: "2020-09-05T00:00:00Z"
+draft: false  # Is this a draft? true/false
+toc: true  # Show table of contents? true/false
+type: docs  # Do not modify.
+tags: [randomforests, R, models, ml, machine learning]
 featured: false
+
 image:
   caption: ""
   focal_point: ""
-lastMod: "2020-09-05T00:00:00Z"
+
+# Add menu entry to sidebar.
+# - name: Declare this menu item as a parent with ID `name`.
+# - weight: Position of link in menu.
+menu:
+  adaboost:
+    name: Overview
+    weight: 1
+
+authors:
+- jarrod
+categories: []
+
 projects: []
-subtitle: Using ADABoost to make your Random Forest models better
-summary: Using ADABoost to make your Random Forest models better
-tags: [randomforests, models, ml, machine learning]
-title: Practical Application of ADABoost
+
+
 ---
 
 Random Forest Modeling Overview

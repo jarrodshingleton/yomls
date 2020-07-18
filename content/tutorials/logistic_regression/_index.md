@@ -1,19 +1,38 @@
 ---
-authors:
-- jarrod
-categories: []
+# Course title, summary, and position.
+linktitle: A Quick Introduction to Logistic Regression
+summary: Learn how to use Logistic Regression, a type of generalize linear model for estimating discrete response variables.
+weight: 1
+
+# Page metadata.
+title: An Intro to Logistic Regression
+subtitle: Picking between two choices - Which one is it?
 date: "2020-02-05T00:00:00Z"
-draft: false
+lastMod: "2020-09-05T00:00:00Z"
+draft: false  # Is this a draft? true/false
+toc: true  # Show table of contents? true/false
+type: docs  # Do not modify.
+tags: [R, models, ml, machine learning]
 featured: false
+
 image:
   caption: ""
   focal_point: ""
-lastMod: "2020-09-05T00:00:00Z"
+
+# Add menu entry to sidebar.
+# - name: Declare this menu item as a parent with ID `name`.
+# - weight: Position of link in menu.
+menu:
+  logistic_regression:
+    name: Overview
+    weight: 1
+
+authors:
+- jarrod
+categories: []
+
 projects: []
-subtitle: Picking between two choices - Which one is it?
-summary: Picking between two choices - Which one is it?
-tags: [R, models, ml, machine learning]
-title: An Intro to Logistic Regression
+
 ---
 
 
