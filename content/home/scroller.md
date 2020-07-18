@@ -35,8 +35,8 @@ height = ""
   cta_icon = "graduation-cap"
 
 [[item]]
-  title = "A Very Great Awesome ML Tutorial"
-  content = "Follow this [**link**](/tutorials/newtutorial/) :smile:"
+  title = "An Excellent Introduction to ADABoost"
+  content = "Follow this [**link**](/tutorials/adaboost/) :smile:"
   align = "left"
 
   overlay_color = "#555"  # An HTML color value.
