@@ -1,10 +1,22 @@
 ---
 title: "What do I do with all these words?!"
-author: "Jarrod Shingleton"
-date: "7/20/2020"
-output: 
-  html_document: 
-    keep_md: yes
+subtitle: 
+
+authors:
+- jarrod
+categories: []
+date: "2020-07-20T00:00:00Z"
+draft: false
+featured: false
+image:
+  caption: ""
+  focal_point: ""
+lastMod: "2020-07-21T00:00:00Z"
+projects: []
+
+summary: Some text manipulation, visualization techniques and analysis. 
+tags: [R, models, ml, machine learning, data mining, text analytics, sentiment analysis, word clouds]
+
 ---
 
 As a continuation on last week's blog entry, I am going to go into some text manipulation and visualization. In particular, I am going to show you how to create a word cloud and do a little sentiment analysis.
