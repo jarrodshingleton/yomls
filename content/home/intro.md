@@ -3,7 +3,7 @@
 # Any elements can be added in the body: https://sourcethemes.com/academic/docs/writing-markdown-latex/
 # Add more sections by duplicating this file and customizing to your requirements.
 
-widget = "blank"  # See https://sourcethemes.com/academic/docs/page-builder/
+widget = "hero"  # See https://sourcethemes.com/academic/docs/page-builder/
 headless = true  # This file represents a page section.
 active = true  # Activate this widget? true/false
 weight = 1  # Order that this section will appear.
@@ -11,9 +11,11 @@ weight = 1  # Order that this section will appear.
 title = "Ye Olde Machine Learning Shoppe"
 subtitle = ""
 
+hero_media = "/headers/ML Pic 2_Color_1_full.png"
+
 [design]
   # Choose how many columns the section has. Valid values: 1 or 2.
-  columns = "1"
+  columns = "2"
 
 [design.background]
   # Apply a background color, gradient, or image.
@@ -29,7 +31,7 @@ subtitle = ""
   # gradient_end = "SkyBlue"
   
   # Background image.
-  image = "headers/ML Pic 1.jpg" # "headers/bubbles-wide.jpg"  # Name of image in `static/img/`.
+  image = "headers/inter_arches.jpg" # "headers/bubbles-wide.jpg"  # Name of image in `static/img/`.
   image_darken = 0.6  # Darken the image? Range 0-1 where 0 is transparent and 1 is opaque.
   image_size = "cover"  #  Options are `cover` (default), `contain`, or `actual` size.
   image_position = "center"  # Options include `left`, `center` (default), or `right`.
@@ -56,7 +58,6 @@ Our YOMLS site is still under construction. Please excuse the mess. If you would
 
 Welcome to our little olde shoppe of **Machine Learning Algorithms**. This site strives to make it easy to connect data sets with various machine learning algorithms based on the data structure and characteristics. We include code examples from both R and Python.  
 
--Should put a fun picture here!
 
 **We add more as we go,** so check back here regularly!
 

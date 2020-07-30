@@ -61,7 +61,7 @@ head(test1)
 
 ```
 
-There is a WHOLE BUNCH of stuff that we are not particularly concerned with, but maybe we could use later. We really only want to take a look at the "text" column. Then we can take it through the hoops that we took the boring dataset through last week!
+There is a WHOLE BUNCH of stuff that we are not particularly concerned with, but maybe we could use later. We really only want to take a look at the "text" column. Then we can take it through the hoops that we took the boring data set through last week!
 
 Remember, we need a couple of packages.
 
@@ -119,7 +119,7 @@ head(w2)
 ## must     must   77
 ```
 
-Okay. That is a bummer so we are also going to supress the words "Donald", "trump", and "trumps" as we already know that is what we are looking at. When you are performing a twitter scrape like this, you may have to go back and remove some of the words after scraping.
+Okay. That is a bummer so we are also going to suppress the words "Donald", "trump", and "trumps" as we already know that is what we are looking at. When you are performing a twitter scrape like this, you may have to go back and remove some of the words after scraping.
 
 ```r
 corpus<-tm_map(corpus, removeWords, c("trump", "donald", "trumps")) 
