@@ -15,7 +15,7 @@ link_hover = "rgb(0, 0, 255)"
 #"rgb(54, 54, 54)"
 
 # Menu
-menu_primary = "#95c494" #olive green-ish... #"#ffdb66" #light puke yellow  #"#fcc429" #puke yellow  #"#FAEBD7" #antique white
+menu_primary = "#95c494" #olive green-ish... #"#FAEBD7" #antique white
 menu_text = "#2F4F4F"
 menu_text_active = "#000000"
 menu_title = "#2F4F4F"
@@ -23,4 +23,18 @@ menu_link_hover = "#95c494" #olive green-ish... ##FF0000"
 
 # Home sections
 home_section_odd = "#c49495" #light maroon-ish #"whitesmoke" # "moccasin"
-home_section_even = "#ffdb66" #light puke yellow #"#95c494" #olive green-ish... #"whitesmoke" # "darkgray"
+home_section_even = "#ffdb66" #light puke yellow  #"whitesmoke" # "darkgray"
+
+
+#SET of Complimentary colors
+# "#95c494" #olive green-ish...
+# "#ffdb66" #light puke yellow
+# "#c49495" #light maroon-ish
+# "#8b29fc" #Dark purple
+# "#47ffbf" #Very Light Green
+# "#ff6647" #Orange
+#############################
+#Other Interesting Colors
+#"#7252ff" #light reddish-Purple
+
+

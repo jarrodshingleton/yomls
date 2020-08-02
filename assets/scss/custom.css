@@ -1,0 +1,14 @@
+/*Custom CSS file to override behavior in various widgets and pages.
+Can write CSS Classes and specify those.*/
+
+/*override widget section-heading formats*/
+
+/*.section-heading h2 {
+  color: #2F4F4F;
+}
+
+.section-heading p {
+  font-weight: 400;
+  font-size: 1.1rem;
+  color: #FF0000; /*#2F4F4F;*/
+/*}*/
