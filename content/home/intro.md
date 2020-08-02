@@ -11,7 +11,7 @@ weight = 1  # Order that this section will appear.
 title = "Ye Olde Machine Learning Shoppe"
 subtitle = ""
 
-hero_media = "/headers/ML Pic 2_Color_1_full.png"
+hero_media = "/headers/ML Pic 2_trans.png"
 
 [design]
   # Choose how many columns the section has. Valid values: 1 or 2.
