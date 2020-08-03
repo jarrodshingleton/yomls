@@ -1,36 +1,46 @@
-<p align="center"><a href="https://sourcethemes.com/academic/" target="_blank" rel="noopener"><img src="https://sourcethemes.com/academic/img/logo_200px.png" alt="Academic logo"></a></p>
+# Some quick introductory tools to the Ye Olde Machine Learning Shoppe Website
 
-# Academic Kickstart: The Template for [Academic Website Builder](https://sourcethemes.com/academic/)
+The [**Ye Olde Machine Learning Shoppe**](https://yeoldemachinelearningshoppe.com/) website is a place for sharing the latest in machine learning, from thoughts, to news, to articles about different machine learning algorithms and how to implement them.  
+
+If you have some thoughts and would like to post a blog or article to our site, please contact the admins via the contact widget on the webpage. We are definitely open to thoughts, ideas, research, funny stories, or anything else that might delight your fellow data scientists. 
+
+Provide us your name, email address, what you would like to post and we will communicate with you before we post. Once you become a regular contributor, we will definitely add you to our "Meet the Team" page as a regular contributor! (But we will always respect your wishes with regards to privacy...please see our **Privacy Policy** - policy.md in this repository)
+
+Please note that we won't always be able to accept everything for publication as we would like to stay within our mandate - showing off great data science! We reserve the right to publish or not publish content sent to us!
+
+But we are ALWAYS open to new ideas and thoughts!
+
+Please see our terms.md document in this repository for futher details.
+
+## Making a Blog Post
+
+Two ways to make a blog post:
+
+1. Write your entire blog post in a markdown file. Then send the .md file and any illustrations, figures, or pictures to the administrators. We will edit the files only enough to work on our site and publish. (If we need to make any editorial changes to the content, we will make sure we talk to you first.)
+
+2. Write your blog post in RMarkdown. send us the .rmd file and any relevant data (plus any pictures you may want included...) and we will render, edit it, and post it! (Same disclaimer about editorial changes.)
+
+3. Write your blog post in Rmarkdown, render it yourself to a markdown (.md) file, and send us the .md file, any rendered illustrations, figures, or pictures and we will post it! (Again, with the disclaimer about editorial). 
+
+
+## Writing an Article
+
+Standards to be published.
+
+
+## Contacts
+
+The administrators of this repository, the YOMLS website, and content contained in the Shoppe are:
+
+Jarrod Shingleton
+Casey Connors
+
+
+# The YOMLs website is based on: Academic Kickstart: The Template for [Academic Website Builder](https://sourcethemes.com/academic/)
 
 [**Academic**](https://github.com/gcushen/hugo-academic) makes it easy to create a beautiful website for free using Markdown, Jupyter, or RStudio. Customize anything on your site with widgets, themes, and language packs. [Check out the latest demo](https://academic-demo.netlify.app/) of what you'll get in less than 10 minutes, or [view the showcase](https://sourcethemes.com/academic/#expo).
 
-**Academic Kickstart** provides a minimal template to kickstart your new website.
-
-- 👉 [**Get Started**](#install)
 - 📚 [View the **documentation**](https://sourcethemes.com/academic/docs/)
-- 💬 [Chat with the **Academic community**](https://spectrum.chat/academic) or [**Hugo community**](https://discourse.gohugo.io)
-- 🐦 Twitter: [@source_themes](https://twitter.com/source_themes) [@GeorgeCushen](https://twitter.com/GeorgeCushen) [#MadeWithAcademic](https://twitter.com/search?q=%23MadeWithAcademic&src=typd)
-- 💡 [Request a **feature** or report a **bug**](https://github.com/gcushen/hugo-academic/issues)
-- ⬆️ **Updating?** View the [Update Guide](https://sourcethemes.com/academic/docs/update/) and [Release Notes](https://sourcethemes.com/academic/updates/)
-- :heart: **Support development** of Academic:
-  - ☕️ [**Donate a coffee**](https://paypal.me/cushen)
-  - 💵 [Become a backer on **Patreon** and **unlock rewards**](https://www.patreon.com/cushen)
-  - 🖼️ [Decorate your laptop or journal with an Academic **sticker**](https://www.redbubble.com/people/neutreno/works/34387919-academic)
-  - 👕 [Wear the **T-shirt**](https://academic.threadless.com/)
-  - :woman_technologist: [**Contribute**](https://sourcethemes.com/academic/docs/contribute/)
-
-[![Screenshot](https://raw.githubusercontent.com/gcushen/hugo-academic/master/academic.png)](https://github.com/gcushen/hugo-academic/)
-
-## Install
-
-You can choose from one of the following four methods to install:
-
-* [**one-click install using your web browser (recommended)**](https://sourcethemes.com/academic/docs/install/#install-with-web-browser)
-* [install on your computer using **Git** with the Command Prompt/Terminal app](https://sourcethemes.com/academic/docs/install/#install-with-git)
-* [install on your computer by downloading the **ZIP files**](https://sourcethemes.com/academic/docs/install/#install-with-zip)
-* [install on your computer with **RStudio**](https://sourcethemes.com/academic/docs/install/#install-with-rstudio)
-
-Then [personalize your new site](https://sourcethemes.com/academic/docs/get-started/).
 
 ## Ecosystem
 
