@@ -7,15 +7,16 @@ commentable: false
 editable: false
 
 # Optional header image (relative to `static/img/` folder).
-header:
-  caption: ""
-  image: "ml_logo_trans.png"
+# header:
+#   caption: ""
+#   image: "ml_logo_trans.png"
 ---
 
+{{< figure library="true" src="ml_logo_trans.png" >}}
 
-#**YE OLDE MACHINE LEARNING SHOPPE (YOMLS) Privacy Policy**
+# YE OLDE MACHINE LEARNING SHOPPE (YOMLS) Privacy Policy
 
-##*Effective Data: 03 August 2020*
+## Effective Data: 03 August 2020
 
 Protecting your privacy is our priority. This Statement of Privacy applies to the website, yeoldemachinelearningshoppe.com (YOMLS) and governs data collection and usage. The YOMLS website posts information in the form of short-form web logs (Blogs) and long-form Articles and several other various methods of distribution of learning and data in the Machine Learning, Statistics, Math, and sometimes Philosophy areas of knowledge. We use only content provided by contributors and reserve the right to not publish content provided to us or to publish lightly edited versions of the content. We will not post anything provided to us that we have edited without checking with the Contributor first!  Contributors may, at any time, ask us to remove their content from our site, and we will do so without hestitation (though we will be very sad!)
 
